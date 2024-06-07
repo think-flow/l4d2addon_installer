@@ -1,8 +1,25 @@
 <script setup lang="ts">
 import HelloWorld from './components/HelloWorld.vue'
+import LeftColumn from './components/Layout/LeftColumn.vue';
+import RightColumn from './components/Layout/RightColumn.vue';
 </script>
 
 <template>
+  <div class="container">
+    <LeftColumn />
+    <RightColumn />
+  </div>
+</template>
+
+<style>
+.container {
+  display: flex;
+  height: 100vh;
+}
+</style>
+
+
+<!-- <template>
   <div>
     <a href="https://www.electronjs.org/" target="_blank">
       <img src="./assets/electron.svg" class="logo electron" alt="Electron logo" />
@@ -46,4 +63,4 @@ import HelloWorld from './components/HelloWorld.vue'
 .logo.vue:hover {
   filter: drop-shadow(0 0 2em #42b883aa);
 }
-</style>
+</style> -->
