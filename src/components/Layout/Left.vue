@@ -6,7 +6,9 @@ const files = reactive([])
 
 onMounted(async () => {
     const datas = await ipcRenderer.invoke('get-vpk-files');
+
     console.log(datas);
+    
     datas.forEach(data => {
         files.push(data)
     });

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-async function  H() {
+
+async function openAddonsFloder() {
     try {
-        let d=await ipcRenderer.invoke('get-l4d2-hellper');
-        alert(d)
+        let addonsPath = await ipcRenderer.invoke('get-addons-path');
+        await ipcRenderer.openFolder(addonsPath);
     } catch (error) {
         alert(error);
-        console.log(error)
     }
 }
 
@@ -14,8 +14,7 @@ async function  H() {
 <template>
     <div class="content">
         <!-- 右边上方的内容可以在这里添加 -->
-
-        <button type="button" @click="H">点击我</button>
+        <button type="button" @click="openAddonsFloder">addons文件夹</button>
     </div>
 </template>
 

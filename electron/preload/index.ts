@@ -21,6 +21,9 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
 
   // You can expose other APTs you need here.
   // ...
+  openFolder(path: string) {
+    return ipcRenderer.invoke('openFolder', path)
+  },
 })
 
 // --------- Preload scripts loading ---------
