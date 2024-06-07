@@ -18,7 +18,7 @@ onMounted(async () => {
         <!-- 展示vpk文件 -->
         <ul>
             <li v-for="item in files">
-                {{ item.fileWithoutEx }}
+                {{ item.file }}
             </li>
         </ul>
     </div>

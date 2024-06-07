@@ -23,34 +23,10 @@ const getSteamPathWindows = () => {
     });
 };
 
-// macOS平台检查常见路径
-const getSteamPathMacOS = () => {
-    return new Promise((resolve, reject) => {
-        const steamPaths = [
-            path.join(os.homedir(), '.steam', 'steam'),
-            path.join(os.homedir(), '.local', 'share', 'Steam')
-        ];
-
-        for (const steamPath of steamPaths) {
-            if (fs.existsSync(steamPath)) {
-                return resolve(steamPath);
-            }
-        }
-
-        reject('未找到Steam安装路径');
-    });
-};
-
 // 获取Steam路径
 const getSteamPath = () => {
     return new Promise((resolve, reject) => {
-        if (os.platform() === 'win32') {
-            getSteamPathWindows().then(resolve).catch(reject);
-        } else if (os.platform() === 'darwin') {
-            getSteamPathMacOS().then(resolve).catch(reject);
-        } else {
-            reject('不支持的操作系统');
-        }
+        getSteamPathWindows().then(resolve).catch(reject);
     });
 };
 
@@ -118,7 +94,7 @@ const getVpkFiles = () => {
                 const stats = fs.statSync(filePath);
                 vpkFilesInfo.push({
                     file,
-                    fileWithoutEx:path.parse(filePath).name,
+                    fileWithoutEx: path.parse(filePath).name,
                     filePath,
                     creationTime: stats.birthtime
                 });
