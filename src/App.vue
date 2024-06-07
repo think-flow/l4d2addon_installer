@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import HelloWorld from './components/HelloWorld.vue'
-import LeftColumn from './components/Layout/LeftColumn.vue';
-import RightColumn from './components/Layout/RightColumn.vue';
+import Left from './components/Layout/Left.vue';
+import Right from './components/Layout/Right.vue';
 </script>
 
 <template>
   <div class="container">
-    <LeftColumn />
-    <RightColumn />
+    <Left />
+    <Right />
   </div>
 </template>
 
