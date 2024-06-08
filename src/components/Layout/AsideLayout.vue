@@ -16,7 +16,8 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div class="left-column">
+    <el-scrollbar wrap-class="container">
+        <div>
         <!-- 展示vpk文件 -->
         <ul>
             <li v-for="item in files">
@@ -24,15 +25,17 @@ onMounted(async () => {
             </li>
         </ul>
     </div>
+    </el-scrollbar>
+   
 </template>
 
 <style>
-.left-column {
-    width: 25%;
+.container {
+    height: 100vh;
     background-color: #f0f0f0;
     box-sizing: border-box;
     border-right: 1px solid #ccc;
-    overflow: scroll;
+    /* overflow-y: auto; */
 }
 
 ul {
