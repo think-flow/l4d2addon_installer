@@ -4,30 +4,34 @@ import regedit from 'regedit'
 import trash from 'trash'
 import { log } from './logHelper'
 
-// Windows平台读取注册表
-const getSteamPathWindows = () => {
+//缓存获得的steam安装路径
+let g_steamPath: string = null;
+let g_gamePath: string = null;
+let g_addonsPath: string = null;
+
+// 获取Steam路径
+const getSteamPath = () => {
+    if (g_steamPath != null) {
+        return new Promise((resolve, reject) => {
+            return resolve(g_steamPath);
+        })
+    }
+    //从注册表中获取steam安装路径
     return new Promise((resolve, reject) => {
         const steamRegistryPath = 'HKCU\\Software\\Valve\\Steam';
         const steamRegistryKey = 'SteamPath';
-
         regedit.list(steamRegistryPath, (err, result) => {
             if (err) {
                 return reject('读取注册表出错: ' + err);
             }
 
             if (result[steamRegistryPath] && result[steamRegistryPath].values[steamRegistryKey]) {
-                resolve(result[steamRegistryPath].values[steamRegistryKey].value);
+                g_steamPath = result[steamRegistryPath].values[steamRegistryKey].value
+                return resolve(g_steamPath);
             } else {
-                reject('未找到Steam安装路径');
+                return reject('未找到Steam安装路径');
             }
         });
-    });
-};
-
-// 获取Steam路径
-const getSteamPath = () => {
-    return new Promise((resolve, reject) => {
-        getSteamPathWindows().then(resolve).catch(reject);
     });
 };
 
@@ -46,6 +50,11 @@ const parseLibraryFoldersVDF = (vdfContent) => {
 
 // 获取 Left 4 Dead 2 的安装路径
 const getGamePath = () => {
+    if (g_gamePath != null) {
+        return new Promise((resolve, reject) => {
+            return resolve(g_gamePath);
+        })
+    }
     return getSteamPath()
         .then(steamPath => {
             const libraryFoldersFile = path.join(steamPath, 'steamapps', 'libraryfolders.vdf');
@@ -59,12 +68,14 @@ const getGamePath = () => {
             for (const folder of libraryFolders) {
                 const gamePath = path.join(folder, 'steamapps', 'common', 'Left 4 Dead 2');
                 if (fs.existsSync(gamePath)) {
+                    g_gamePath = gamePath;
                     return gamePath;
                 }
             }
 
             const defaultGamePath = path.join(steamPath, 'steamapps', 'common', 'Left 4 Dead 2');
             if (fs.existsSync(defaultGamePath)) {
+                g_gamePath = defaultGamePath;
                 return defaultGamePath;
             }
 
@@ -73,11 +84,15 @@ const getGamePath = () => {
 };
 
 const getAddonsPath = async () => {
+    if (g_addonsPath != null) {
+        return g_addonsPath;
+    }
     let gamePath = await getGamePath();
     let addonsPath = path.join(gamePath, 'left4dead2', 'addons');
     if (!await fs.existsSync(addonsPath)) {
         throw new Error('未找到 Addons 文件夹路径');
     }
+    g_addonsPath = addonsPath;
     return addonsPath;
 }
 

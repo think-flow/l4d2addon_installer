@@ -35,7 +35,7 @@ function openGameFolder(){
     height: 100%;
     /* background-color: #fff; */
     
-    background-color: #d5b2b2;
+    /* background-color: #d5b2b2; */
     /* border-bottom: 1px solid #ccc; */
 }
 </style>

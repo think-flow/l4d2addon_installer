@@ -14,7 +14,7 @@ import FooterLayout from './components/Layout/FooterLayout.vue';
         <el-main>
           <MainLayout />
         </el-main>
-        <el-footer height="25%">
+        <el-footer height="25vh">
           <FooterLayout />
         </el-footer>
       </el-container>
