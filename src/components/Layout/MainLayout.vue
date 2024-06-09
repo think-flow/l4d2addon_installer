@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import {ElMessageBox } from 'element-plus'
 
 const isLoading = ref(false);
 async function openAddonsFloder() {
@@ -15,7 +16,8 @@ async function openAddonsFloder() {
 }
 
 function openGameFolder(){
-    alert('暂未实现');
+    // alert('暂未实现');
+    ElMessageBox.alert('暂未实现')
 }
 </script>
 

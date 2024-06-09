@@ -37,6 +37,7 @@
     "vue-tsc": "^2.0.6"
   },
   "dependencies": {
+    "@imengyu/vue3-context-menu": "^1.4.1",
     "element-plus": "^2.7.5",
     "regedit": "^5.1.3"
   }
