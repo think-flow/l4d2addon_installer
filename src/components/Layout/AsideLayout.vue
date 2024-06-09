@@ -19,9 +19,6 @@ onMounted(async () => {
 
 async function updateList() {
     const datas = await ipcRenderer.invoke('get-vpk-files');
-
-    console.log(datas);
-
     files.value = datas;
 }
 
@@ -33,8 +30,6 @@ function onContextmenu(item: any, e: MouseEvent) {
 }
 
 async function onDeleteVpk() {
-    console.log(selectedItem)
-
     let result = await ipcRenderer.delectVpk([selectedItem.filePath], true)
     if (result) {
         ElMessage({
@@ -76,7 +71,6 @@ async function onDeleteVpk() {
     background-color: #f0f0f0;
     box-sizing: border-box;
     border-right: 1px solid #ccc;
-    /* overflow-y: auto; */
 }
 
 ul {

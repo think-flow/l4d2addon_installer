@@ -2,6 +2,7 @@ import path from 'path'
 import fs from 'fs'
 import regedit from 'regedit'
 import trash from 'trash'
+import { log } from './logHelper'
 
 // Windows平台读取注册表
 const getSteamPathWindows = () => {
@@ -101,6 +102,8 @@ const getVpkFiles = () => {
             });
             // 根据创建时间排序，从大到小
             vpkFilesInfo.sort((a, b) => b.creationTime - a.creationTime);
+
+            log(`找到${vpkFilesInfo.length}个vpk文件`);
             resolve(vpkFilesInfo);
         })
     })
@@ -109,23 +112,25 @@ const getVpkFiles = () => {
 const delectVpk = async (filePaths: string[], toTrash: boolean = true) => {
     if (toTrash) {
         // 将文件移到回收站
-        try {
-            await trash(filePaths);
-            console.log('Files moved to trash successfully');
-            return true;
-        } catch (err) {
-            console.error('Error moving files to trash:', err);
-            return false;
+        for (const filePath of filePaths) {
+            try {
+                await trash(filePath);
+                log(`文件 ${filePath} 已成功移至回收站`);
+            } catch (err) {
+                log(`文件移至回收站时出错` + err);
+                return false;
+            }
         }
+        return true;
     } else {
         // 直接删除文件
         const fsAsync = fs.promises;
         for (const filePath of filePaths) {
             try {
                 await fsAsync.unlink(filePath)
-                console.log(`File ${filePath} deleted successfully`);
+                log(`文件 ${filePath} 删除成功`);
             } catch (err) {
-                console.error(`Error deleting file ${filePath}:`, err);
+                log(`文件删除时出错` + err);
                 return false;
             }
         }
