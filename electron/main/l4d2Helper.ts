@@ -1,7 +1,7 @@
 import path from 'path'
-import os from 'os'
-import fs from 'fs';
-import regedit from 'regedit';
+import fs from 'fs'
+import regedit from 'regedit'
+import trash from 'trash'
 
 // Windows平台读取注册表
 const getSteamPathWindows = () => {
@@ -106,10 +106,38 @@ const getVpkFiles = () => {
     })
 }
 
+const delectVpk = async (filePaths: string[], toTrash: boolean = true) => {
+    if (toTrash) {
+        // 将文件移到回收站
+        try {
+            await trash(filePaths);
+            console.log('Files moved to trash successfully');
+            return true;
+        } catch (err) {
+            console.error('Error moving files to trash:', err);
+            return false;
+        }
+    } else {
+        // 直接删除文件
+        const fsAsync = fs.promises;
+        for (const filePath of filePaths) {
+            try {
+                await fsAsync.unlink(filePath)
+                console.log(`File ${filePath} deleted successfully`);
+            } catch (err) {
+                console.error(`Error deleting file ${filePath}:`, err);
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
 const l4d2Hellper = {
     getGamePath,
     getAddonsPath,
-    getVpkFiles
+    getVpkFiles,
+    delectVpk,
 };
 
 export default l4d2Hellper

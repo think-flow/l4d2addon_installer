@@ -24,6 +24,10 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
   openFolder(path: string) {
     return ipcRenderer.invoke('openFolder', path)
   },
+
+  delectVpk(path: string[], toTrash: boolean = true) {
+    return ipcRenderer.invoke('delectVpk', path, toTrash)
+  }
 })
 
 // --------- Preload scripts loading ---------

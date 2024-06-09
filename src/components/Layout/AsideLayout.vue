@@ -3,7 +3,7 @@ import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 
 
-const files = reactive([])
+const files = ref([])
 const isShow = ref(false)
 const optionsComponent = reactive({
     zIndex: 3,
@@ -14,14 +14,16 @@ const optionsComponent = reactive({
 let selectedItem = null;
 
 onMounted(async () => {
+    await updateList();
+})
+
+async function updateList() {
     const datas = await ipcRenderer.invoke('get-vpk-files');
 
     console.log(datas);
 
-    datas.forEach(data => {
-        files.push(data)
-    });
-})
+    files.value = datas;
+}
 
 function onContextmenu(item: any, e: MouseEvent) {
     selectedItem = item;
@@ -30,13 +32,24 @@ function onContextmenu(item: any, e: MouseEvent) {
     optionsComponent.y = e.y;
 }
 
-function onDeleteVpk() {
+async function onDeleteVpk() {
     console.log(selectedItem)
-    //拿到需要删除的项
-    ElMessage({
-        message: '删除成功',
-        type: 'success',
-    })
+
+    let result = await ipcRenderer.delectVpk([selectedItem.filePath], true)
+    if (result) {
+        ElMessage({
+            message: '删除成功',
+            type: 'success',
+        })
+        //删除成功后刷新列表
+        await updateList();
+
+    } else {
+        ElMessage({
+            message: '删除失败',
+            type: 'warning',
+        })
+    }
 }
 </script>
 

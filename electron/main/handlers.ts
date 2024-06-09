@@ -13,3 +13,6 @@ ipcMain.handle('get-vpk-files', (_, arg) => {
     return l4d2Hellper.getVpkFiles();
 })
 
+ipcMain.handle('delectVpk', (_, paths, toTrash) => {
+    return l4d2Hellper.delectVpk(paths, toTrash);
+})
