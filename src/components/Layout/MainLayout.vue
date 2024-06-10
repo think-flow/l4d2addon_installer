@@ -25,6 +25,7 @@ function openGameFolder(){
     <div class="content">
         <el-button type="primary" @click="openAddonsFloder" plain :loading="isLoading">addons文件夹</el-button>
         <el-button type="primary" @click="openGameFolder" plain :loading="isLoading">l4d2文件夹</el-button>
+        安装vpk文件，如果是压缩文件还要自动解压
     </div>
 </template>
 
