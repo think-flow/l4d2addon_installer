@@ -14,8 +14,7 @@ ipcMain.handle('get-game-path', (_, arg) => {
 })
 
 ipcMain.handle('open-file-dialog', async (_, options) => {
-    let result = await dialog.showOpenDialog(win, options)
-    return result.filePaths;
+    return dialog.showOpenDialog(win, options);
 })
 
 ipcMain.handle('get-vpk-files', (_, arg) => {

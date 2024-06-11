@@ -1,27 +1,36 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useLoggerStore } from '../../stores/logger'
 
-const messages = ref([])
 const scrollbarRef = ref()
 const innerScrollbarRef = ref()
+const logger = useLoggerStore()
 
 onMounted(() => {
-    ipcRenderer.on('main-process-log-message', (_event, msg) => {
-        messages.value.push({ time: new Date().toTimeString().split(' ')[0], msg: msg });
-        //设置滚动条到最底部
-        setTimeout(() => {
-            scrollbarRef.value!.setScrollTop(innerScrollbarRef.value!.clientHeight)
-        }, 100)
-    })
+    ipcRenderer.on('main-process-log-message', (_event: any, msg: string) => {
+        logger.logMsg(msg);
+        setScrollBottom();
+    });
+    ipcRenderer.on('main-process-log-error', (_event: any, msg: string) => {
+        logger.logError(msg);
+        setScrollBottom();
+    });
 })
+
+//设置滚动条到最底部
+function setScrollBottom() {
+    setTimeout(() => {
+        scrollbarRef.value!.setScrollTop(innerScrollbarRef.value!.clientHeight)
+    }, 100)
+}
 </script>
 
 <template>
     <el-scrollbar wrap-class="logs" ref="scrollbarRef">
         <div ref="innerScrollbarRef">
-            <div v-for="message in messages">
-                <span class="time">{{ message.time }}</span>
-                <span class="msg">{{ message.msg }}</span>
+            <div v-for="log in logger.logs">
+                <span class="time">{{ log.time.toTimeString().split(' ')[0] }}</span>
+                <span :class="log.type">{{ log.msg }}</span>
             </div>
         </div>
     </el-scrollbar>
@@ -35,13 +44,18 @@ onMounted(() => {
 }
 
 .logs .time {
-    margin-right: 2px;
-    color: #f43030;
+    margin-right: 10px;
+    color: #808080c2;
     font-size: 0.8em;
 }
 
-.logs .msg {
-    color: grey;
+.logs .message {
+    color: #000000a3;
+    font-size: 0.9em;
+}
+
+.logs .error {
+    color: #fe6666;
     font-size: 0.9em;
 }
 </style>

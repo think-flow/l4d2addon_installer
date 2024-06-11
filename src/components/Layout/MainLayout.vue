@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { ElMessageBox, ElMessage, ElSwitch } from 'element-plus'
+import { useLoggerStore } from '../../stores/logger'
 
 const addonPathIsLoading = ref(false);
 const gamePathIsLoading = ref(false);
 const disabled = ref(false);
 const isCoverd = ref(true);
 const extensions = ['vpk', 'zip', 'rar'];
+const logger = useLoggerStore()
 
 async function openAddonsFloder() {
     addonPathIsLoading.value = true;
@@ -14,9 +16,9 @@ async function openAddonsFloder() {
         let addonsPath = await ipcRenderer.invoke('get-addons-path');
         await ipcRenderer.openFolder(addonsPath);
         addonPathIsLoading.value = false;
-    } catch (error) {
+    } catch (err) {
         addonPathIsLoading.value = false;
-        ElMessageBox.alert(error)
+        logger.logError(err)
     }
 }
 
@@ -26,9 +28,9 @@ async function openGameFolder() {
         let gamePath = await ipcRenderer.invoke('get-game-path');
         await ipcRenderer.openFolder(gamePath);
         gamePathIsLoading.value = false;
-    } catch (error) {
+    } catch (err) {
         gamePathIsLoading.value = false;
-        ElMessageBox.alert(error)
+        logger.logError(err)
     }
 }
 
@@ -39,14 +41,15 @@ async function installVpk(files: string[]) {
     disabled.value = false;
     if (result) {
         ElMessage.success('安装成功');
-        return;
+    } else {
+        ElMessage.error(`安装失败，请查看日志`)
     }
-    ElMessage.error(`安装失败，请查看日志`);
+    //todo 刷新列表
 }
 
 async function handleClick() {
     //选择文件安装
-    const filePaths: string[] = await ipcRenderer.invoke('open-file-dialog', {
+    const filePaths:string[] = await ipcRenderer.showOpenDialog({
         title: '选择',
         filters: [{
             name: 'mod文件',
@@ -54,10 +57,11 @@ async function handleClick() {
         }],
         properties: ['openFile', 'multiSelections', 'dontAddToRecent']
     });
+    if (filePaths == null) return;
     await installVpk(filePaths);
 }
 
-async function handleDrop(event: DragEvent) {
+async function handleDrop(event: any) {
     //拖动文件安装
     const arr = [...event.dataTransfer?.files];
     const filePaths: string[] = arr.map(file => file.path);
@@ -85,7 +89,7 @@ function preventDeault(event: DragEvent) {
                 :loading="addonPathIsLoading">addons文件夹</el-button>
             <el-button type="primary" @click="openGameFolder" plain :loading="gamePathIsLoading">l4d2文件夹</el-button>
         </div>
-        <div class="bottom" :class="{ 'disabled': disabled }">
+        <div class="bottom" v-loading="disabled" element-loading-text="正在安装...">
             <div class="switch">
                 <el-switch inline-prompt v-model="isCoverd" active-text="替换文件" inactive-text="不替换文件" size="large"
                     style="--el-switch-on-color: #409eff99; --el-switch-off-color: #409eff99" />
@@ -141,10 +145,5 @@ function preventDeault(event: DragEvent) {
     position: absolute;
     top: 5px;
     right: 10px;
-}
-
-.disabled {
-    pointer-events: none;
-    opacity: 0.5;
 }
 </style>

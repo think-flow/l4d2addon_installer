@@ -1,25 +1,37 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useLoggerStore } from '../../stores/logger'
 
+type VpkFileInfo = {
+    file: string,
+    fileWithoutEx: string,
+    filePath: string,
+    creationTime: Date
+}
 
-const files = ref([])
+const files = ref<VpkFileInfo[]>([])
 const isShow = ref(false)
+const logger = useLoggerStore()
 const optionsComponent = reactive({
     zIndex: 3,
     // minWidth: 230,
     x: 500,
     y: 200
 })
-let selectedItem = null;
+let selectedItem: any = null;
 
 onMounted(async () => {
     await updateList();
 })
 
 async function updateList() {
-    const datas = await ipcRenderer.invoke('get-vpk-files');
-    files.value = datas;
+    try {
+        const datas = await ipcRenderer.invoke('get-vpk-files');
+        files.value = datas;
+    } catch (err) {
+        logger.logError(err)
+    }
 }
 
 function onContextmenu(item: any, e: MouseEvent) {

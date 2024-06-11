@@ -24,10 +24,15 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
   openFolder(path: string) {
     return ipcRenderer.invoke('openFolder', path)
   },
-
   delectVpk(path: string[], toTrash: boolean = true) {
     return ipcRenderer.invoke('delectVpk', path, toTrash)
+  },
+  async showOpenDialog(options: Electron.OpenDialogOptions) {
+    let result = await ipcRenderer.invoke('open-file-dialog', options)
+    if(result.canceled) return null; //用户点击取消按钮
+    return result.filePaths;
   }
+
 })
 
 // --------- Preload scripts loading ---------
