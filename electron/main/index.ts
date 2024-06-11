@@ -44,8 +44,6 @@ const preload = path.join(__dirname, '../preload/index.mjs')
 const indexHtml = path.join(RENDERER_DIST, 'index.html')
 
 async function createWindow() {
-  // 去掉顶部工具栏
-  // Menu.setApplicationMenu(null)
 
   win = new BrowserWindow({
     title: 'Main window',
@@ -67,6 +65,8 @@ async function createWindow() {
     win.webContents.openDevTools()
   } else {
     win.loadFile(indexHtml)
+    // 去掉顶部工具栏
+    Menu.setApplicationMenu(null)
   }
 
   // Test actively push message to the Electron-Renderer

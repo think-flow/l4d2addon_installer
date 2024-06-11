@@ -5,6 +5,7 @@ import { useLoggerStore } from '../../stores/logger'
 import { useVpkFileStore } from '../../stores/vpkFile'
 
 //完成拖动多选，和shift多选功能
+//完成压缩包安装
 
 const isShow = ref(false)
 const fileStore = useVpkFileStore()
