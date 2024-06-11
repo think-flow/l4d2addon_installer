@@ -28,6 +28,7 @@
     "@vitejs/plugin-vue": "^5.0.4",
     "electron": "^29.1.1",
     "electron-builder": "^24.13.3",
+    "sass": "^1.77.4",
     "typescript": "^5.4.2",
     "vite": "^5.1.5",
     "vite-plugin-electron": "^0.28.4",
@@ -36,6 +37,9 @@
     "vue-tsc": "^2.0.6"
   },
   "dependencies": {
+    "@imengyu/vue3-context-menu": "^1.4.1",
+    "element-plus": "^2.7.5",
+    "pinia": "^2.1.7",
     "regedit": "^5.1.3"
   }
 }
