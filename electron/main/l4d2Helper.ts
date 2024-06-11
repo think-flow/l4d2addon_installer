@@ -1,8 +1,10 @@
 import path from 'path'
 import fs from 'fs'
 import regedit from 'regedit'
-import trash from 'trash'
 import { log } from './logHelper'
+import { shell } from 'electron'
+
+//加个正在安装的进度条
 
 //缓存获得的steam安装路径
 let g_steamPath: string = null;
@@ -87,9 +89,9 @@ const getAddonsPath = async () => {
     if (g_addonsPath != null) {
         return g_addonsPath;
     }
-    let gamePath = await getGamePath();
-    let addonsPath = path.join(gamePath, 'left4dead2', 'addons');
-    if (!await fs.existsSync(addonsPath)) {
+    const gamePath = await getGamePath();
+    const addonsPath = path.join(gamePath, 'left4dead2', 'addons');
+    if (!fs.existsSync(addonsPath)) {
         throw new Error('未找到 Addons 文件夹路径');
     }
     g_addonsPath = addonsPath;
@@ -98,7 +100,7 @@ const getAddonsPath = async () => {
 
 const getVpkFiles = () => {
     return new Promise(async (resolve, reject) => {
-        let addonsPath = await getAddonsPath();
+        const addonsPath = await getAddonsPath();
         fs.readdir(addonsPath, (err, files) => {
             if (err) {
                 return reject('读取目录出错: ' + err);
@@ -129,8 +131,9 @@ const delectVpk = async (filePaths: string[], toTrash: boolean = true) => {
         // 将文件移到回收站
         for (const filePath of filePaths) {
             try {
-                await trash(filePath);
-                log(`文件 ${filePath} 已成功移至回收站`);
+                await shell.trashItem(filePath);
+                // log(`文件 ${filePath} 已成功移至回收站`);
+                log(`${path.basename(filePath)} 已成功移至回收站`);
             } catch (err) {
                 log(`文件移至回收站时出错` + err);
                 return false;
@@ -139,11 +142,11 @@ const delectVpk = async (filePaths: string[], toTrash: boolean = true) => {
         return true;
     } else {
         // 直接删除文件
-        const fsAsync = fs.promises;
         for (const filePath of filePaths) {
             try {
-                await fsAsync.unlink(filePath)
-                log(`文件 ${filePath} 删除成功`);
+                await fs.promises.unlink(filePath)
+                // log(`${filePath} 删除成功`);
+                log(`${path.basename(filePath)} 删除成功`);
             } catch (err) {
                 log(`文件删除时出错` + err);
                 return false;
@@ -153,11 +156,46 @@ const delectVpk = async (filePaths: string[], toTrash: boolean = true) => {
     }
 }
 
+const installVpk = async (filePaths: string[], isCoverd: boolean) => {
+    let success = true;
+    //vpk文件
+    //将文件复制到addons文件夹下
+    const addonsPath = await getAddonsPath();
+    for (const filepath of filePaths) {
+        const fileName = path.basename(filepath);
+        let destPath = path.join(addonsPath, fileName);
+        try {
+            if (isCoverd) {
+                await fs.promises.copyFile(filepath, destPath);
+            } else {
+                await fs.promises.copyFile(filepath, destPath, fs.constants.COPYFILE_EXCL);
+            }
+            log(`${fileName} 已安装`);
+        } catch (err) {
+            success = false;
+            if (err.code === 'EEXIST') {
+                //文件已存在
+                log(`${fileName} 已存在`);
+            } else {
+                log(err);
+            }
+        }
+    }
+    return success;
+
+
+    //压缩包
+
+
+
+}
+
 const l4d2Hellper = {
     getGamePath,
     getAddonsPath,
     getVpkFiles,
     delectVpk,
+    installVpk,
 };
 
 export default l4d2Hellper

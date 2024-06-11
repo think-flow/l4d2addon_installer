@@ -4,6 +4,7 @@ import { ElMessageBox, ElMessage } from 'element-plus'
 
 const addonPathIsLoading = ref(false);
 const gamePathIsLoading = ref(false);
+const disabled = ref(false);
 const extensions = ['vpk', 'zip', 'rar'];
 
 async function openAddonsFloder() {
@@ -32,7 +33,14 @@ async function openGameFolder() {
 
 //安装vpk文件
 async function installVpk(files: string[]) {
-
+    disabled.value = true;
+    const result = await ipcRenderer.invoke('install-vpk-files', files, true);
+    disabled.value = false;
+    if (result) {
+        ElMessage.success('安装成功');
+        return;
+    }
+    ElMessage.error(`安装失败，请查看日志`);
 }
 
 async function handleClick() {
@@ -78,8 +86,8 @@ function preventDeault(event: DragEvent) {
         </div>
         <div class="bottom">
             <!-- 文件安装区域 -->
-            <div class="installer" @click="handleClick" @contextmenu="handleClick" @dragenter="preventDeault"
-                @dragover="preventDeault" @dragleave="preventDeault" @drop="handleDrop">
+            <div :class="['installer', { 'disabled': disabled }]" @click="handleClick" @contextmenu="handleClick"
+                @dragenter="preventDeault" @dragover="preventDeault" @dragleave="preventDeault" @drop="handleDrop">
                 此区域安装vpk
             </div>
         </div>
@@ -121,5 +129,10 @@ function preventDeault(event: DragEvent) {
 .installer:hover {
     cursor: pointer;
     /* background-color: #e9e9e9; */
+}
+
+.disabled {
+    pointer-events: none;
+    opacity: 0.5;
 }
 </style>

@@ -25,3 +25,7 @@ ipcMain.handle('get-vpk-files', (_, arg) => {
 ipcMain.handle('delectVpk', (_, paths, toTrash) => {
     return l4d2Hellper.delectVpk(paths, toTrash);
 })
+
+ipcMain.handle('install-vpk-files', (_, filePaths: string[], isCoverd: boolean) => {
+    return l4d2Hellper.installVpk(filePaths, isCoverd);
+})
