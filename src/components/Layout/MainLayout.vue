@@ -4,8 +4,6 @@ import { ElMessage, ElSwitch } from 'element-plus'
 import { useLoggerStore } from '../../stores/logger'
 import { useVpkFileStore } from '../../stores/vpkFile';
 
-const addonPathIsLoading = ref(false);
-const gamePathIsLoading = ref(false);
 const disabled = ref(false);
 const isCoverd = ref(true);
 const extensions = ['vpk', 'zip', 'rar'];
@@ -13,25 +11,19 @@ const logger = useLoggerStore()
 const fileStore = useVpkFileStore()
 
 async function openAddonsFloder() {
-    addonPathIsLoading.value = true;
     try {
         let addonsPath = await window.ipcRenderer.invoke('get-addons-path');
         await window.ipcRenderer.openFolder(addonsPath);
-        addonPathIsLoading.value = false;
     } catch (err) {
-        addonPathIsLoading.value = false;
         logger.logError(err)
     }
 }
 
 async function openGameFolder() {
-    gamePathIsLoading.value = true;
     try {
         let gamePath = await window.ipcRenderer.invoke('get-game-path');
         await window.ipcRenderer.openFolder(gamePath);
-        gamePathIsLoading.value = false;
     } catch (err) {
-        gamePathIsLoading.value = false;
         logger.logError(err)
     }
 }
@@ -52,7 +44,7 @@ async function installVpk(files: string[]) {
 
 async function handleClick() {
     //选择文件安装
-    const filePaths:string[] = await window.ipcRenderer.showOpenDialog({
+    const filePaths: string[] = await window.ipcRenderer.showOpenDialog({
         title: '选择',
         filters: [{
             name: 'mod文件',
@@ -88,9 +80,8 @@ function preventDeault(event: DragEvent) {
 <template>
     <div class="content">
         <div class="top">
-            <el-button type="primary" @click="openAddonsFloder" plain
-                :loading="addonPathIsLoading">addons文件夹</el-button>
-            <el-button type="primary" @click="openGameFolder" plain :loading="gamePathIsLoading">l4d2文件夹</el-button>
+            <el-button type="primary" @click="openAddonsFloder" plain>addons文件夹</el-button>
+            <el-button type="primary" @click="openGameFolder" plain>l4d2文件夹</el-button>
         </div>
         <div class="bottom" v-loading="disabled" element-loading-text="正在安装...">
             <div class="switch">
@@ -110,7 +101,6 @@ function preventDeault(event: DragEvent) {
 .content {
     display: flex;
     flex-direction: column;
-    flex: 1;
     height: 100%;
 }
 

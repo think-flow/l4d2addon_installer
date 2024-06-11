@@ -1,15 +1,10 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage,ElRow,ElCol } from 'element-plus'
 import { useLoggerStore } from '../../stores/logger'
 import { useVpkFileStore } from '../../stores/vpkFile'
 
-type VpkFileInfo = {
-    file: string,
-    fileWithoutEx: string,
-    filePath: string,
-    creationTime: Date
-}
+//完成拖动多选，和shift多选功能
 
 const isShow = ref(false)
 const fileStore = useVpkFileStore()
@@ -52,7 +47,8 @@ async function onDeleteVpk() {
 </script>
 
 <template>
-    <el-scrollbar wrap-class="container">
+    <div class="container">
+        <el-scrollbar wrap-class="list">
         <div>
             <!-- 展示vpk文件 -->
             <ul>
@@ -61,7 +57,18 @@ async function onDeleteVpk() {
                 </li>
             </ul>
         </div>
-    </el-scrollbar>
+    </el-scrollbar>    
+    <div class="statistics">
+        <el-row>
+            <el-col :span="8">
+                {{fileStore.fileList.length}}个文件
+            </el-col>
+            <el-col :span="16">
+                已选择??个文件
+            </el-col>
+        </el-row>
+    </div>
+    </div>
 
     <context-menu v-model:show="isShow" :options="optionsComponent">
         <context-menu-item label="删除" @click="onDeleteVpk" />
@@ -69,11 +76,25 @@ async function onDeleteVpk() {
 </template>
 
 <style>
-.container {
+.container{
     height: 100vh;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #ccc;
+}
+
+.list {
     background-color: #f0f0f0;
     box-sizing: border-box;
-    border-right: 1px solid #ccc;
+    flex: 1;
+}
+
+.statistics{
+    padding-left:10px;
+    background-color: #f9f9f9;
+    font-size: 0.8em;
+    font-family: serif, sans-serif;
+    border-top: 1px solid #ccc;
 }
 
 ul {

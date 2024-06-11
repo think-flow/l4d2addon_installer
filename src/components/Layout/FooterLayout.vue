@@ -47,15 +47,18 @@ function setScrollBottom() {
     margin-right: 10px;
     color: #808080c2;
     font-size: 0.8em;
+    font-family: serif, sans-serif;
 }
 
 .logs .message {
     color: #000000a3;
     font-size: 0.9em;
+    font-family: serif, sans-serif;
 }
 
 .logs .error {
     color: #fe6666;
     font-size: 0.9em;
+    font-family: serif, sans-serif;
 }
 </style>
