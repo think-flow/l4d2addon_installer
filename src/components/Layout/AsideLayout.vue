@@ -2,6 +2,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useLoggerStore } from '../../stores/logger'
+import { useVpkFileStore } from '../../stores/vpkFile'
 
 type VpkFileInfo = {
     file: string,
@@ -10,9 +11,8 @@ type VpkFileInfo = {
     creationTime: Date
 }
 
-const files = ref<VpkFileInfo[]>([])
 const isShow = ref(false)
-const logger = useLoggerStore()
+const fileStore = useVpkFileStore()
 const optionsComponent = reactive({
     zIndex: 3,
     // minWidth: 230,
@@ -22,17 +22,8 @@ const optionsComponent = reactive({
 let selectedItem: any = null;
 
 onMounted(async () => {
-    await updateList();
+    await fileStore.updateList();
 })
-
-async function updateList() {
-    try {
-        const datas = await ipcRenderer.invoke('get-vpk-files');
-        files.value = datas;
-    } catch (err) {
-        logger.logError(err)
-    }
-}
 
 function onContextmenu(item: any, e: MouseEvent) {
     selectedItem = item;
@@ -42,14 +33,14 @@ function onContextmenu(item: any, e: MouseEvent) {
 }
 
 async function onDeleteVpk() {
-    let result = await ipcRenderer.delectVpk([selectedItem.filePath], true)
+    let result = await window.ipcRenderer.delectVpk([selectedItem.filePath], true)
     if (result) {
         ElMessage({
             message: '删除成功',
             type: 'success',
         })
         //删除成功后刷新列表
-        await updateList();
+        await fileStore.updateList();
 
     } else {
         ElMessage({
@@ -65,8 +56,8 @@ async function onDeleteVpk() {
         <div>
             <!-- 展示vpk文件 -->
             <ul>
-                <li v-for="item in files" @contextmenu.prev="onContextmenu(item, $event)">
-                    {{ item.file }}
+                <li v-for="file in fileStore.fileList" @contextmenu.prev="onContextmenu(file, $event)">
+                    {{ file.file }}
                 </li>
             </ul>
         </div>

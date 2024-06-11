@@ -1,7 +1,13 @@
 import { ipcRenderer, contextBridge } from 'electron'
 
+export type IpcRenderer = {
+  openFolder(path: string),
+  delectVpk(path: string[], toTrash: boolean),
+  showOpenDialog(options: Electron.OpenDialogOptions): Promise<any>
+} & Electron.IpcRenderer
+
 // --------- Expose some API to the Renderer process ---------
-contextBridge.exposeInMainWorld('ipcRenderer', {
+contextBridge.exposeInMainWorld('ipcRenderer', <IpcRenderer>{
   on(...args: Parameters<typeof ipcRenderer.on>) {
     const [channel, listener] = args
     return ipcRenderer.on(channel, (event, ...args) => listener(event, ...args))
@@ -29,7 +35,7 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
   },
   async showOpenDialog(options: Electron.OpenDialogOptions) {
     let result = await ipcRenderer.invoke('open-file-dialog', options)
-    if(result.canceled) return null; //用户点击取消按钮
+    if (result.canceled) return null; //用户点击取消按钮
     return result.filePaths;
   }
 

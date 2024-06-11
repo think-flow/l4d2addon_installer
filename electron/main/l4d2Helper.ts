@@ -107,7 +107,7 @@ const getVpkFiles = async () => {
     // 根据创建时间排序，从大到小
     vpkFilesInfo.sort((a, b) => b.creationTime - a.creationTime);
 
-    log(`找到${vpkFilesInfo.length}个vpk文件`);
+    // log(`找到${vpkFilesInfo.length}个vpk文件`);
     return vpkFilesInfo;
 }
 

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ElMessageBox, ElMessage, ElSwitch } from 'element-plus'
+import { ElMessage, ElSwitch } from 'element-plus'
 import { useLoggerStore } from '../../stores/logger'
+import { useVpkFileStore } from '../../stores/vpkFile';
 
 const addonPathIsLoading = ref(false);
 const gamePathIsLoading = ref(false);
@@ -9,12 +10,13 @@ const disabled = ref(false);
 const isCoverd = ref(true);
 const extensions = ['vpk', 'zip', 'rar'];
 const logger = useLoggerStore()
+const fileStore = useVpkFileStore()
 
 async function openAddonsFloder() {
     addonPathIsLoading.value = true;
     try {
-        let addonsPath = await ipcRenderer.invoke('get-addons-path');
-        await ipcRenderer.openFolder(addonsPath);
+        let addonsPath = await window.ipcRenderer.invoke('get-addons-path');
+        await window.ipcRenderer.openFolder(addonsPath);
         addonPathIsLoading.value = false;
     } catch (err) {
         addonPathIsLoading.value = false;
@@ -25,8 +27,8 @@ async function openAddonsFloder() {
 async function openGameFolder() {
     gamePathIsLoading.value = true;
     try {
-        let gamePath = await ipcRenderer.invoke('get-game-path');
-        await ipcRenderer.openFolder(gamePath);
+        let gamePath = await window.ipcRenderer.invoke('get-game-path');
+        await window.ipcRenderer.openFolder(gamePath);
         gamePathIsLoading.value = false;
     } catch (err) {
         gamePathIsLoading.value = false;
@@ -37,19 +39,20 @@ async function openGameFolder() {
 //安装vpk文件
 async function installVpk(files: string[]) {
     disabled.value = true;
-    const result = await ipcRenderer.invoke('install-vpk-files', files, isCoverd.value);
+    const result = await window.ipcRenderer.invoke('install-vpk-files', files, isCoverd.value);
     disabled.value = false;
     if (result) {
         ElMessage.success('安装成功');
     } else {
         ElMessage.error(`安装失败，请查看日志`)
     }
-    //todo 刷新列表
+    //刷新列表
+    await fileStore.updateList()
 }
 
 async function handleClick() {
     //选择文件安装
-    const filePaths:string[] = await ipcRenderer.showOpenDialog({
+    const filePaths:string[] = await window.ipcRenderer.showOpenDialog({
         title: '选择',
         filters: [{
             name: 'mod文件',

@@ -17,7 +17,7 @@ ipcMain.handle('open-file-dialog', async (_, options) => {
     return dialog.showOpenDialog(win, options);
 })
 
-ipcMain.handle('get-vpk-files', (_, arg) => {
+ipcMain.handle('get-vpk-files', (_) => {
     return l4d2Hellper.getVpkFiles();
 })
 

@@ -7,11 +7,11 @@ const innerScrollbarRef = ref()
 const logger = useLoggerStore()
 
 onMounted(() => {
-    ipcRenderer.on('main-process-log-message', (_event: any, msg: string) => {
+    window.ipcRenderer.on('main-process-log-message', (_event: any, msg: string) => {
         logger.logMsg(msg);
         setScrollBottom();
     });
-    ipcRenderer.on('main-process-log-error', (_event: any, msg: string) => {
+    window.ipcRenderer.on('main-process-log-error', (_event: any, msg: string) => {
         logger.logError(msg);
         setScrollBottom();
     });
