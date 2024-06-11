@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ElMessageBox, ElMessage } from 'element-plus'
+import { ElMessageBox, ElMessage, ElSwitch } from 'element-plus'
 
 const addonPathIsLoading = ref(false);
 const gamePathIsLoading = ref(false);
 const disabled = ref(false);
+const isCoverd = ref(true);
 const extensions = ['vpk', 'zip', 'rar'];
 
 async function openAddonsFloder() {
@@ -34,7 +35,7 @@ async function openGameFolder() {
 //安装vpk文件
 async function installVpk(files: string[]) {
     disabled.value = true;
-    const result = await ipcRenderer.invoke('install-vpk-files', files, true);
+    const result = await ipcRenderer.invoke('install-vpk-files', files, isCoverd.value);
     disabled.value = false;
     if (result) {
         ElMessage.success('安装成功');
@@ -84,10 +85,14 @@ function preventDeault(event: DragEvent) {
                 :loading="addonPathIsLoading">addons文件夹</el-button>
             <el-button type="primary" @click="openGameFolder" plain :loading="gamePathIsLoading">l4d2文件夹</el-button>
         </div>
-        <div class="bottom">
+        <div class="bottom" :class="{ 'disabled': disabled }">
+            <div class="switch">
+                <el-switch inline-prompt v-model="isCoverd" active-text="替换文件" inactive-text="不替换文件" size="large"
+                    style="--el-switch-on-color: #409eff99; --el-switch-off-color: #409eff99" />
+            </div>
             <!-- 文件安装区域 -->
-            <div :class="['installer', { 'disabled': disabled }]" @click="handleClick" @contextmenu="handleClick"
-                @dragenter="preventDeault" @dragover="preventDeault" @dragleave="preventDeault" @drop="handleDrop">
+            <div class="installer" @click="handleClick" @contextmenu="handleClick" @dragenter="preventDeault"
+                @dragover="preventDeault" @dragleave="preventDeault" @drop="handleDrop">
                 此区域安装vpk
             </div>
         </div>
@@ -110,6 +115,7 @@ function preventDeault(event: DragEvent) {
 .content .bottom {
     height: 50%;
     margin: 2px;
+    position: relative;
 }
 
 .installer {
@@ -122,13 +128,19 @@ function preventDeault(event: DragEvent) {
     background-color: #f9f9f9;
     user-select: none;
     font-size: 0.9em;
-    color: grey;
     font-family: serif, sans-serif;
+    color: grey;
 }
 
 .installer:hover {
     cursor: pointer;
     /* background-color: #e9e9e9; */
+}
+
+.switch {
+    position: absolute;
+    top: 5px;
+    right: 10px;
 }
 
 .disabled {
