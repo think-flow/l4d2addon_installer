@@ -3,13 +3,21 @@
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
   "appId": "YourAppID",
   "asar": true,
-  "productName": "YourAppName",
+  "productName": "l4d2addon_installer",
   "directories": {
     "output": "release/${version}"
   },
   "files": [
     "dist",
-    "dist-electron"
+    "dist-electron",
+    {
+      "from": "node_modules/regedit/vbs",
+      "to": "node_modules/regedit/vbs",
+      "filter": ["**/*"]
+    }
+  ],
+  "asarUnpack": [
+    "**/node_modules/regedit/vbs/**"
   ],
   "mac": {
     "target": [

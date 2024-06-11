@@ -18,6 +18,11 @@ const getSteamPath = () => {
     return new Promise<string>((resolve, reject) => {
         const steamRegistryPath = 'HKCU\\Software\\Valve\\Steam';
         const steamRegistryKey = 'SteamPath';
+        
+        //如果不从指定的位置读取regList.wsf文件
+        //那么在程序打包后，读取注册表时，会因为找不到regList.wsf文件而报错
+        regedit.setExternalVBSLocation('./resources/app.asar.unpacked/node_modules/regedit/vbs')
+
         regedit.list([steamRegistryPath], (err, result) => {
             if (err) {
                 return reject('读取注册表出错: ' + err);
