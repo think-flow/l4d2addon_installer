@@ -3,6 +3,8 @@ import fs from 'fs'
 import regedit from 'regedit'
 import { log, logErr } from './logHelper'
 import { shell } from 'electron'
+import jszip from 'jszip'
+import { ArcFile, createExtractorFromData } from 'node-unrar-js'
 
 //缓存获得的steam安装路径
 let g_steamPath: string = null;
@@ -18,7 +20,7 @@ const getSteamPath = () => {
     return new Promise<string>((resolve, reject) => {
         const steamRegistryPath = 'HKCU\\Software\\Valve\\Steam';
         const steamRegistryKey = 'SteamPath';
-        
+
         //如果不从指定的位置读取regList.wsf文件
         //那么在程序打包后，读取注册表时，会因为找不到regList.wsf文件而报错
         regedit.setExternalVBSLocation('./resources/app.asar.unpacked/node_modules/regedit/vbs')
@@ -146,36 +148,143 @@ const delectVpk = async (filePaths: string[], toTrash: boolean = true) => {
 
 const installVpk = async (filePaths: string[], isCoverd: boolean) => {
     let success = true;
-    //vpk文件
-    //将文件复制到addons文件夹下
     const addonsPath = await getAddonsPath();
     for (const filepath of filePaths) {
         const fileName = path.basename(filepath);
-        let destPath = path.join(addonsPath, fileName);
-        try {
-            if (isCoverd) {
-                await fs.promises.copyFile(filepath, destPath);
-            } else {
-                await fs.promises.copyFile(filepath, destPath, fs.constants.COPYFILE_EXCL);
+        const extname = path.extname(filepath).toLowerCase();
+        if (extname === '.vpk') {
+            let destPath = path.join(addonsPath, fileName);
+            try {
+                if (isCoverd) {
+                    await fs.promises.copyFile(filepath, destPath);
+                } else {
+                    await fs.promises.copyFile(filepath, destPath, fs.constants.COPYFILE_EXCL);
+                }
+                log(`${fileName} 已安装`);
+            } catch (err) {
+                success = false;
+                if (err.code === 'EEXIST') {
+                    //文件已存在
+                    logErr(`${fileName} 已存在`);
+                } else {
+                    logErr(err);
+                }
             }
-            log(`${fileName} 已安装`);
-        } catch (err) {
-            success = false;
-            if (err.code === 'EEXIST') {
-                //文件已存在
-                logErr(`${fileName} 已存在`);
-            } else {
+        } else if (extname === '.zip') {
+            log(`正在解压 ${fileName}`);
+            const vpkEntries: jszip.JSZipObject[] = [];
+            try {
+                const buffer = await fs.promises.readFile(filepath);
+                const zip = await jszip.loadAsync(buffer);
+                zip.forEach(async (_, zipEntry) => {
+                    if (zipEntry.dir) return;
+                    if (path.extname(zipEntry.name).toLocaleLowerCase() === '.vpk') {
+                        vpkEntries.push(zipEntry);
+                    }
+                });
+                log(`解压出${vpkEntries.length}个文件 ${vpkEntries.map(c => `"${c.name}"`).reduce((pv, cv) => `${pv},${cv}`)}`);
+            } catch (err) {
+                success = false;
                 logErr(err);
+                continue; //如果解压文件失败，则去处理下一个文件
             }
+
+            //压缩文件解压成功，开始写入文件
+            for (const entry of vpkEntries) {
+                try {
+                    let destPath = path.join(addonsPath, path.basename(entry.name));
+                    if ((!isCoverd) && fs.existsSync(destPath)) {
+                        //要求不覆盖文件，假如文件存在则输出错误件
+                        success = false;
+                        logErr(`${entry.name} 已存在`);
+                        continue;
+                    }
+                    const buffer = await entry.async('nodebuffer');
+                    await fs.promises.writeFile(destPath, buffer);
+                    log(`${entry.name} 已安装`);
+                } catch (err) {
+                    success = false;
+                    logErr(err);
+                }
+            }
+        } else if (extname === '.rar') {
+            // const extractVpkFiles = (zipFilePath: string): any => {
+            //     return new Promise((resolve, reject) => {
+            //         const worker = new Worker('./electron/worker_threads/unzip-worker.js', {
+            //             workerData: { zipFilePath }
+            //         });
+
+            //         worker.on('message', (message) => {
+            //             if (message.status === 'success') {
+            //                 resolve(message.files);
+            //             } else {
+            //                 reject(message.error);
+            //             }
+            //         });
+
+            //         worker.on('error', (err) => {
+            //             reject(err);
+            //         });
+
+            //         worker.on('exit', (code) => {
+            //             if (code !== 0) {
+            //                 reject(new Error(`Worker stopped with exit code ${code}`));
+            //             }
+            //         });
+            //     })
+            // };
+
+
+            log(`正在解压 ${fileName}`);
+            const buffer = await fs.promises.readFile(filepath);
+            const extractor = await createExtractorFromData({ data: buffer });
+            const extracted = await extractor.extract({
+                files: (fileHeader) => {
+                    if (fileHeader.flags.directory) return false;
+                    return path.extname(fileHeader.name).toLocaleLowerCase() === '.vpk';
+                }
+            });
+            let vpkFiles: ArcFile[] = [];
+            try {
+                vpkFiles = [...extracted.files];
+                log(`解压出${vpkFiles.length}个文件 ${vpkFiles.map(c => `"${c.fileHeader.name}"`).reduce((pv, cv) => `${pv},${cv}`)}`);
+
+            } catch (err) {
+                success = false;
+                if (err.reason === 'ERAR_MISSING_PASSWORD') {
+                    logErr('不支持带有密码的rar文件');
+                } else {
+                    logErr(err)
+                }
+                continue; //如果解压文件失败，则去处理下一个文件
+            }
+
+            //压缩文件解压成功，开始写入文件
+            for (const vpkFile of vpkFiles) {
+                try {
+                    let destPath = path.join(addonsPath, path.basename(vpkFile.fileHeader.name));
+                    if ((!isCoverd) && fs.existsSync(destPath)) {
+                        //要求不覆盖文件，假如文件存在则输出错误件
+                        success = false;
+                        logErr(`${vpkFile.fileHeader.name} 已存在`);
+                        continue;
+                    }
+                    const buffer = Buffer.from(vpkFile.extraction)
+                    await fs.promises.writeFile(destPath, buffer);
+                    log(`${vpkFile.fileHeader.name} 已安装`);
+                } catch (err) {
+                    console.log(err)
+                    success = false;
+                    logErr(err);
+                }
+            }
+
+        } else {
+            success = false;
+            logErr(`${fileName} 不支持该文件格式`);
         }
     }
     return success;
-
-
-    //压缩包
-
-
-
 }
 
 const l4d2Hellper = {
