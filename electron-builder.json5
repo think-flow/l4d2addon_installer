@@ -11,13 +11,14 @@
     "dist",
     "dist-electron",
     {
-      "from": "node_modules/regedit/vbs",
-      "to": "node_modules/regedit/vbs",
+      "from": "electron/worker_threads",
+      "to": "electron/worker_threads",
       "filter": ["**/*"]
     }
   ],
   "asarUnpack": [
-    "**/node_modules/regedit/vbs/**"
+    "**/node_modules/regedit/vbs/**",
+    "**/electron/worker_threads/**",
   ],
   "mac": {
     "target": [

@@ -211,7 +211,11 @@ const installVpk = async (filePaths: string[], isCoverd: boolean) => {
             log(`正在解压 ${fileName}`);
 
             //创建unrar进程
-            let unrarProcess = cp.fork('./electron/worker_threads/unrar-worker.js');
+            let workerPath = './electron/worker_threads/unrar-worker.js';
+            if (process.env.NODE_ENV !== 'development') {
+                workerPath = './resources/app.asar.unpacked/electron/worker_threads/unrar-worker.js';
+            }
+            let unrarProcess = cp.fork(workerPath);
             const run_unrar_process = (filePath, addonsPath, isCoverd): Promise<void> => {
                 return new Promise((resolve, reject) => {
                     unrarProcess.on('message', (msg: any) => {
