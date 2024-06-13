@@ -12,13 +12,13 @@
     "dist-electron",
     {
       "from": "electron/worker_threads",
-      "to": "electron/worker_threads",
+      "to": "worker_threads",
       "filter": ["**/*"]
     }
   ],
   "asarUnpack": [
     "**/node_modules/regedit/vbs/**",
-    "**/electron/worker_threads/**",
+    "**/worker_threads/**",
   ],
   "mac": {
     "target": [

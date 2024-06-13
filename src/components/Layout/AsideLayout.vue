@@ -94,6 +94,7 @@ async function onDeleteVpk() {
     font-size: 0.8em;
     font-family: serif, sans-serif;
     border-top: 1px solid #ccc;
+    user-select: none;
 }
 
 ul {
