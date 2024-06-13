@@ -4,7 +4,7 @@ import regedit from 'regedit'
 import { log, logErr } from './logHelper'
 import { shell } from 'electron'
 import jszip from 'jszip'
-import { ArcFile, createExtractorFromData } from 'node-unrar-js'
+import cp from 'child_process'
 
 //缓存获得的steam安装路径
 let g_steamPath: string = null;
@@ -208,77 +208,91 @@ const installVpk = async (filePaths: string[], isCoverd: boolean) => {
                 }
             }
         } else if (extname === '.rar') {
-            // const extractVpkFiles = (zipFilePath: string): any => {
-            //     return new Promise((resolve, reject) => {
-            //         const worker = new Worker('./electron/worker_threads/unzip-worker.js', {
-            //             workerData: { zipFilePath }
-            //         });
-
-            //         worker.on('message', (message) => {
-            //             if (message.status === 'success') {
-            //                 resolve(message.files);
-            //             } else {
-            //                 reject(message.error);
-            //             }
-            //         });
-
-            //         worker.on('error', (err) => {
-            //             reject(err);
-            //         });
-
-            //         worker.on('exit', (code) => {
-            //             if (code !== 0) {
-            //                 reject(new Error(`Worker stopped with exit code ${code}`));
-            //             }
-            //         });
-            //     })
-            // };
-
-
             log(`正在解压 ${fileName}`);
-            const buffer = await fs.promises.readFile(filepath);
-            const extractor = await createExtractorFromData({ data: buffer });
-            const extracted = await extractor.extract({
-                files: (fileHeader) => {
-                    if (fileHeader.flags.directory) return false;
-                    return path.extname(fileHeader.name).toLocaleLowerCase() === '.vpk';
-                }
-            });
-            let vpkFiles: ArcFile[] = [];
-            try {
-                vpkFiles = [...extracted.files];
-                log(`解压出${vpkFiles.length}个文件 ${vpkFiles.map(c => `"${c.fileHeader.name}"`).reduce((pv, cv) => `${pv},${cv}`)}`);
 
-            } catch (err) {
-                success = false;
-                if (err.reason === 'ERAR_MISSING_PASSWORD') {
-                    logErr('不支持带有密码的rar文件');
-                } else {
-                    logErr(err)
-                }
-                continue; //如果解压文件失败，则去处理下一个文件
-            }
-
-            //压缩文件解压成功，开始写入文件
-            for (const vpkFile of vpkFiles) {
-                try {
-                    let destPath = path.join(addonsPath, path.basename(vpkFile.fileHeader.name));
-                    if ((!isCoverd) && fs.existsSync(destPath)) {
-                        //要求不覆盖文件，假如文件存在则输出错误件
+            //创建unrar进程
+            let unrarProcess = cp.fork('./electron/worker_threads/unrar-worker.js');
+            const run_unrar_process = (filePath, addonsPath, isCoverd): Promise<void> => {
+                return new Promise((resolve, reject) => {
+                    unrarProcess.on('message', (msg: any) => {
+                        if (msg.type === 'finished') {
+                            resolve();
+                        } else if (msg.type === 'msg') {
+                            log(msg.content);
+                        } else {
+                            success = false;
+                            logErr(msg.content);
+                        }
+                    });
+                    unrarProcess.on('error', (err) => {
                         success = false;
-                        logErr(`${vpkFile.fileHeader.name} 已存在`);
-                        continue;
-                    }
-                    const buffer = Buffer.from(vpkFile.extraction)
-                    await fs.promises.writeFile(destPath, buffer);
-                    log(`${vpkFile.fileHeader.name} 已安装`);
-                } catch (err) {
-                    console.log(err)
-                    success = false;
-                    logErr(err);
-                }
+                        reject(err);
+                    });
+                    unrarProcess.on('exit', (code) => {
+                        success = false;
+                        if (code !== 0) {
+                            reject(new Error(`unrar-worker stopped with exit code ${code}`));
+                        }
+                    });
+                    //启动unrar进程
+                    unrarProcess.send({ filePath, addonsPath, isCoverd });
+                })
             }
 
+            try {
+                await run_unrar_process(filepath, addonsPath, isCoverd);
+                unrarProcess.kill(); //杀掉unrar进程
+            } catch (err) {
+                //解压进程异常退出
+                logErr(`${fileName} 解压失败 ${err.message}`)
+                continue;
+            }
+            /*
+                        //该方式会阻塞主线程，导致窗口不能响应
+                        const buffer = await fs.promises.readFile(filepath);
+                        const extractor = await createExtractorFromData({ data: buffer });
+                        const extracted = extractor.extract({
+                            files: (fileHeader) => {
+                                if (fileHeader.flags.directory) return false;
+                                return path.extname(fileHeader.name).toLocaleLowerCase() === '.vpk';
+                            }
+                        });
+                        let vpkFiles: ArcFile[] = [];
+                        try {
+                            vpkFiles = [...extracted.files];
+                            log(`解压出${vpkFiles.length}个文件 ${vpkFiles.map(c => `"${c.fileHeader.name}"`).reduce((pv, cv) => `${pv},${cv}`)}`);
+            
+                        } catch (err) {
+                            success = false;
+                            if (err.reason === 'ERAR_MISSING_PASSWORD') {
+                                logErr('不支持带有密码的rar文件');
+                            } else {
+                                logErr(err)
+                            }
+                            continue; //如果解压文件失败，则去处理下一个文件
+                        }
+            
+            
+                        //压缩文件解压成功，开始写入文件
+                        for (const vpkFile of vpkFiles) {
+                            try {
+                                let destPath = path.join(addonsPath, path.basename(vpkFile.fileHeader.name));
+                                if ((!isCoverd) && fs.existsSync(destPath)) {
+                                    //要求不覆盖文件，假如文件存在则输出错误件
+                                    success = false;
+                                    logErr(`${vpkFile.fileHeader.name} 已存在`);
+                                    continue;
+                                }
+                                // const buffer = Buffer.from(vpkFile.extraction)
+                                // await fs.promises.writeFile(destPath, buffer);
+                                log(`${vpkFile.fileHeader.name} 已安装`);
+                            } catch (err) {
+                                console.log(err)
+                                success = false;
+                                logErr(err);
+                            }
+                        }
+            */
         } else {
             success = false;
             logErr(`${fileName} 不支持该文件格式`);
