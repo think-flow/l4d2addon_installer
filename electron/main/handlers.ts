@@ -1,6 +1,8 @@
 import { ipcMain, shell, dialog } from 'electron'
 import l4d2Hellper from './l4d2Helper'
 import { win } from './index'
+import os from 'os'
+import path from 'path'
 
 ipcMain.handle('openFolder', (_, path) => {
     return shell.openPath(path);
@@ -9,8 +11,13 @@ ipcMain.handle('openFolder', (_, path) => {
 ipcMain.handle('get-addons-path', (_, arg) => {
     return l4d2Hellper.getAddonsPath();
 })
+
 ipcMain.handle('get-game-path', (_, arg) => {
     return l4d2Hellper.getGamePath();
+})
+
+ipcMain.handle('get-Downloads-path', (_, arg) => {
+    return path.join(os.homedir(), 'Downloads');
 })
 
 ipcMain.handle('open-file-dialog', async (_, options) => {

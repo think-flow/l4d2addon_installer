@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
-import { ElMessage,ElRow,ElCol } from 'element-plus'
-import { useLoggerStore } from '../../stores/logger'
+import { ElMessage, ElRow, ElCol } from 'element-plus'
 import { useVpkFileStore } from '../../stores/vpkFile'
 
 //完成拖动多选，和shift多选功能
-//完成压缩包安装
 
 const isShow = ref(false)
 const fileStore = useVpkFileStore()
@@ -50,25 +48,25 @@ async function onDeleteVpk() {
 <template>
     <div class="container">
         <el-scrollbar wrap-class="list">
-        <div>
-            <!-- 展示vpk文件 -->
-            <ul>
-                <li v-for="file in fileStore.fileList" @contextmenu.prev="onContextmenu(file, $event)">
-                    {{ file.file }}
-                </li>
-            </ul>
+            <div>
+                <!-- 展示vpk文件 -->
+                <ul>
+                    <li v-for="file in fileStore.fileList" @contextmenu.prev="onContextmenu(file, $event)">
+                        {{ file.file }}
+                    </li>
+                </ul>
+            </div>
+        </el-scrollbar>
+        <div class="statistics">
+            <el-row>
+                <el-col :span="8">
+                    {{ fileStore.fileList.length }}个文件
+                </el-col>
+                <el-col :span="16">
+                    已选择??个文件
+                </el-col>
+            </el-row>
         </div>
-    </el-scrollbar>    
-    <div class="statistics">
-        <el-row>
-            <el-col :span="8">
-                {{fileStore.fileList.length}}个文件
-            </el-col>
-            <el-col :span="16">
-                已选择??个文件
-            </el-col>
-        </el-row>
-    </div>
     </div>
 
     <context-menu v-model:show="isShow" :options="optionsComponent">
@@ -77,7 +75,7 @@ async function onDeleteVpk() {
 </template>
 
 <style>
-.container{
+.container {
     height: 100vh;
     display: flex;
     flex-direction: column;
@@ -90,8 +88,8 @@ async function onDeleteVpk() {
     flex: 1;
 }
 
-.statistics{
-    padding-left:10px;
+.statistics {
+    padding-left: 10px;
     background-color: #f9f9f9;
     font-size: 0.8em;
     font-family: serif, sans-serif;

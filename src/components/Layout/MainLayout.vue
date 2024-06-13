@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { ElMessage, ElSwitch } from 'element-plus'
 import { useLoggerStore } from '../../stores/logger'
 import { useVpkFileStore } from '../../stores/vpkFile';
@@ -9,6 +9,15 @@ const isCoverd = ref(true);
 const extensions = ['vpk', 'zip', 'rar'];
 const logger = useLoggerStore()
 const fileStore = useVpkFileStore()
+
+watch(isCoverd, (newValue, oldValue) => {
+    if (newValue === oldValue) return;
+    localStorage.setItem('isCoverd', newValue.toString())
+})
+
+onMounted(() => {
+    isCoverd.value = localStorage.getItem('isCoverd') === 'true'
+})
 
 async function openAddonsFloder() {
     try {
@@ -23,6 +32,15 @@ async function openGameFolder() {
     try {
         let gamePath = await window.ipcRenderer.invoke('get-game-path');
         await window.ipcRenderer.openFolder(gamePath);
+    } catch (err) {
+        logger.logError(err)
+    }
+}
+
+async function openDownloadsFolder() {
+    try {
+        let downloadsPath = await window.ipcRenderer.invoke('get-Downloads-path');
+        await window.ipcRenderer.openFolder(downloadsPath);
     } catch (err) {
         logger.logError(err)
     }
@@ -82,11 +100,12 @@ function preventDeault(event: DragEvent) {
         <div class="top">
             <el-button type="primary" @click="openAddonsFloder" plain>addons文件夹</el-button>
             <el-button type="primary" @click="openGameFolder" plain>l4d2文件夹</el-button>
+            <el-button type="primary" @click="openDownloadsFolder" plain>下载文件夹</el-button>
         </div>
         <div class="bottom" v-loading="disabled" element-loading-text="正在安装...">
             <div class="switch">
                 <el-switch inline-prompt v-model="isCoverd" active-text="替换文件" inactive-text="不替换文件" size="large"
-                    style="--el-switch-on-color: #409eff99; --el-switch-off-color: #409eff99" />
+                    style="--el-switch-on-color: #409effe0; --el-switch-off-color: #409effe0" />
             </div>
             <!-- 文件安装区域 -->
             <div class="installer" @click="handleClick" @contextmenu="handleClick" @dragenter="preventDeault"
