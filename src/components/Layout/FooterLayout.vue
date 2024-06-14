@@ -40,7 +40,8 @@ function setScrollBottom() {
 .logs {
     background-color: #f9f9f9;
     height: 100%;
-    margin-left: 2px;
+    padding-left: 5px;
+    border-top: 1px solid var(--el-border-color);
 }
 
 .logs .time {

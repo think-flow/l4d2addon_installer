@@ -3,21 +3,13 @@ import { ref, onMounted, watch } from 'vue';
 import { ElMessage, ElSwitch } from 'element-plus'
 import { useLoggerStore } from '../../stores/logger'
 import { useVpkFileStore } from '../../stores/vpkFile';
+import { useAppConfigStore } from '../../stores/config';
 
 const disabled = ref(false);
-const isCoverd = ref(true);
 const extensions = ['vpk', 'zip', 'rar'];
-const logger = useLoggerStore()
-const fileStore = useVpkFileStore()
-
-watch(isCoverd, (newValue, oldValue) => {
-    if (newValue === oldValue) return;
-    localStorage.setItem('isCoverd', newValue.toString())
-})
-
-onMounted(() => {
-    isCoverd.value = localStorage.getItem('isCoverd') === 'true'
-})
+const logger = useLoggerStore();
+const fileStore = useVpkFileStore();
+const appConfig = useAppConfigStore().config;
 
 async function openAddonsFloder() {
     try {
@@ -49,7 +41,7 @@ async function openDownloadsFolder() {
 //安装vpk文件
 async function installVpk(files: string[]) {
     disabled.value = true;
-    const result = await window.ipcRenderer.invoke('install-vpk-files', files, isCoverd.value);
+    const result = await window.ipcRenderer.invoke('install-vpk-files', files, appConfig.isCoverd);
     disabled.value = false;
     if (result) {
         ElMessage.success('安装成功');
@@ -104,7 +96,7 @@ function preventDeault(event: DragEvent) {
         </div>
         <div class="bottom" v-loading="disabled" element-loading-text="正在安装...">
             <div class="switch">
-                <el-switch inline-prompt v-model="isCoverd" active-text="替换文件" inactive-text="不替换文件" size="large"
+                <el-switch inline-prompt v-model="appConfig.isCoverd" active-text="替换文件" inactive-text="不替换文件" size="large"
                     style="--el-switch-on-color: #409effe0; --el-switch-off-color: #409effe0" />
             </div>
             <!-- 文件安装区域 -->
@@ -125,12 +117,12 @@ function preventDeault(event: DragEvent) {
 
 .content .top {
     flex: 1;
-    margin: 2px;
+    padding: 2px;
 }
 
 .content .bottom {
     height: 50%;
-    margin: 2px;
+    /* margin: 2px; */
     position: relative;
 }
 

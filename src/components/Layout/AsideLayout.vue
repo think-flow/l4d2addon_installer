@@ -4,12 +4,12 @@ import { ElMessage, ElRow, ElCol } from 'element-plus'
 import { useVpkFileStore } from '../../stores/vpkFile'
 
 //完成拖动多选，和shift多选功能
+//在文件下显示大小，创建日期和修改日期
 
 const isShow = ref(false)
 const fileStore = useVpkFileStore()
 const optionsComponent = reactive({
     zIndex: 3,
-    // minWidth: 230,
     x: 500,
     y: 200
 })
@@ -77,15 +77,16 @@ async function onDeleteVpk() {
 <style>
 .container {
     height: 100vh;
+    flex: 1;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid #ccc;
 }
 
 .list {
     background-color: #f0f0f0;
     box-sizing: border-box;
     flex: 1;
+    word-break: break-all;
 }
 
 .statistics {
