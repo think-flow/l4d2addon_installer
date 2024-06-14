@@ -6,7 +6,8 @@ type VpkFileInfo = {
     file: string,
     fileWithoutEx: string,
     filePath: string,
-    creationTime: Date
+    creationTime: Date,
+    size: string
 }
 
 export const useVpkFileStore = defineStore('vpk-file-list', () => {

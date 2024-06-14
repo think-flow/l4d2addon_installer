@@ -10,6 +10,7 @@ let g_steamPath: string = null;
 let g_gamePath: string = null;
 let g_addonsPath: string = null;
 
+
 // 获取Steam路径
 const getSteamPath = () => {
     if (g_steamPath != null) {
@@ -107,7 +108,8 @@ const getVpkFiles = async () => {
             file,
             fileWithoutEx: path.parse(filePath).name,
             filePath,
-            creationTime: stats.birthtime
+            creationTime: stats.birthtime,
+            size: formatFileSize(stats.size)
         });
     });
     // 根据创建时间排序，从大到小
@@ -115,6 +117,25 @@ const getVpkFiles = async () => {
 
     // log(`找到${vpkFilesInfo.length}个vpk文件`);
     return vpkFilesInfo;
+
+    function formatFileSize(bytes: number) {
+        if (bytes === 0) return '0 B';
+        const thresholds = {
+            'TB': Math.pow(1024, 4),
+            'GB': Math.pow(1024, 3),
+            'MB': Math.pow(1024, 2),
+            'KB': 1024,
+            'B': 1,
+        };
+        let unit = 'B';
+        for (let u in thresholds) {
+            if (bytes >= thresholds[u]) {
+                unit = u;
+                break;
+            }
+        }
+        return Math.floor((bytes / thresholds[unit]) * 100) / 100 + ' ' + unit;
+    }
 }
 
 const delectVpk = async (filePaths: string[], toTrash: boolean = true) => {
