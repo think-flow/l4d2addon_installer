@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElRow, ElCol } from 'element-plus'
 import { useVpkFileStore } from '../../stores/vpkFile'
 
@@ -8,6 +8,11 @@ import { useVpkFileStore } from '../../stores/vpkFile'
 const showContextmenu = ref(false)
 const showProperty = ref(false)
 const mousePosition = reactive({ x: 0, y: 0 })
+const filePropertyStyle = computed((): any => ({
+    top: mousePosition.y + 'px',
+    left: mousePosition.x + 'px',
+    visibility: showProperty.value ? 'visible' : 'hidden'
+}))
 
 const fileStore = useVpkFileStore()
 const optionsComponent = reactive({
@@ -66,13 +71,12 @@ function onMousemove(e: MouseEvent) {
     if (showProperty.value) return;
     let element = <HTMLLIElement>e.target;
     let rect = element.getBoundingClientRect();
+    let offsetHeight = (<HTMLDivElement>document.querySelector('.fileProperty')).offsetHeight;
 
-    //记住 如果fileProperty高度重新变了，就要更改这里的代码
     mousePosition.x = e.clientX;
-    if (rect.bottom + 42 > window.innerHeight) {
-        //当rect.bottom + 42px 已经超出窗口高度，则将其显示在li元素顶部
-        mousePosition.y = rect.top - 42; //在li元素顶部显示
-
+    if (rect.bottom + offsetHeight > window.innerHeight) {
+        //当rect.bottom + 属性窗口高度 超出窗口高度时，则将其显示在li元素顶部
+        mousePosition.y = rect.top - offsetHeight; //在li元素顶部显示
     } else {
         mousePosition.y = rect.bottom; //在li元素底部显示
     }
@@ -107,8 +111,7 @@ function formatDate(date: Date) {
                 </ul>
             </div>
         </el-scrollbar>
-        <div class="fileProperty" v-show="showProperty"
-            :style="{ top: mousePosition.y + 'px', left: mousePosition.x + 'px' }">
+        <div class="fileProperty" :style="filePropertyStyle">
             <div>大小: {{ showItem?.size }}</div>
             <div>创建日期: {{ formatDate(showItem?.creationTime) }}</div>
         </div>
