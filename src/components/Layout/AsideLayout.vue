@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { StyleValue, computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElRow, ElCol } from 'element-plus'
 import { useVpkFileStore } from '../../stores/vpkFile'
 
@@ -7,8 +7,8 @@ import { useVpkFileStore } from '../../stores/vpkFile'
 
 const showContextmenu = ref(false)
 const showProperty = ref(false)
-const mousePosition = reactive({ x: 0, y: 0 })
-const filePropertyStyle = computed((): any => ({
+const mousePosition = { x: 0, y: 0 }
+const filePropertyStyle = computed((): StyleValue => ({
     top: mousePosition.y + 'px',
     left: mousePosition.x + 'px',
     visibility: showProperty.value ? 'visible' : 'hidden'
@@ -35,7 +35,7 @@ function onContextmenu(item: any, e: MouseEvent) {
 }
 
 async function onDeleteVpk() {
-    let result = await window.ipcRenderer.delectVpk([selectedItem.filePath], true)
+    const result = await window.ipcRenderer.delectVpk([selectedItem.filePath], true)
     if (result) {
         ElMessage({
             message: '删除成功',
@@ -55,7 +55,7 @@ async function onDeleteVpk() {
 function onMouseover(item: any, e: MouseEvent) {
     const hoverLi: any = e.target;
     showItem = item;
-    let popTimer = window.setTimeout(() => {
+    const popTimer = window.setTimeout(() => {
         showProperty.value = true;
     }, 1000);
 
@@ -69,16 +69,20 @@ function onMouseover(item: any, e: MouseEvent) {
 function onMousemove(e: MouseEvent) {
     //更新鼠标位置  
     if (showProperty.value) return;
-    let element = <HTMLLIElement>e.target;
-    let rect = element.getBoundingClientRect();
-    let offsetHeight = (<HTMLDivElement>document.querySelector('.fileProperty')).offsetHeight;
+    const liElement = <HTMLLIElement>e.target;
+    // const rect = element.getBoundingClientRect();
+    //使用如下计算，替代getBoundingClientRect方法
+    const scrollTop = (<HTMLDivElement>document.querySelector('.list')).scrollTop;
+    const liTop = liElement.offsetTop - scrollTop;
+    const liBottom = liTop + liElement.offsetHeight;
+    const offsetHeight = (<HTMLDivElement>document.querySelector('.fileProperty')).offsetHeight;
 
-    mousePosition.x = e.clientX;
-    if (rect.bottom + offsetHeight > window.innerHeight) {
-        //当rect.bottom + 属性窗口高度 超出窗口高度时，则将其显示在li元素顶部
-        mousePosition.y = rect.top - offsetHeight; //在li元素顶部显示
+    mousePosition.x = e.clientX + 15;
+    if (liBottom + offsetHeight > window.innerHeight) {
+        //当li.bottom + 属性窗口高度 超出窗口高度时，则将其显示在li元素顶部
+        mousePosition.y = liTop - offsetHeight; //在li元素顶部显示
     } else {
-        mousePosition.y = rect.bottom; //在li元素底部显示
+        mousePosition.y = liBottom; //在li元素底部显示
     }
 }
 
