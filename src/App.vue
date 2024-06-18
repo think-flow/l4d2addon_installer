@@ -19,7 +19,7 @@ function onMouseMove(e: MouseEvent) {
   //限制left最大和最小范围 10%-70%
   if (leftWidth < 10 || leftWidth > 70) return;
   appConfig.leftSideWidth = leftWidth;
-  console.log(`clientX:${e.clientX} containerWidth:${containerWidth} leftWidth:${leftWidth}`)
+  // console.log(`clientX:${e.clientX} containerWidth:${containerWidth} leftWidth:${leftWidth}`)
 }
 
 function stopDragging() {
