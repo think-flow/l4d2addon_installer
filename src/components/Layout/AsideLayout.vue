@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElRow, ElCol } from 'element-plus'
 import { useLoggerStore } from '../../stores/logger'
 import { useVpkFileStore } from '../../stores/vpkFile'
+
+type VpkFileInfo = typeof fileStore.fileList[number];
 
 const logger = useLoggerStore();
 const showContextmenu = ref(false)
@@ -133,40 +135,12 @@ function formatDate(date: Date | null | undefined) {
 }
 
 /** 处理文件列表选择 ------开始----*/
-type VpkFileInfo = typeof fileStore.fileList[number];
-type VpkFileInfoMap = {
-    source: VpkFileInfo,
-    selected: ReturnType<typeof ref<boolean>>
-};
-//使用文件的全路径作为key
-const fileListMap = new Map<string, VpkFileInfoMap>();
-
-
-//如何更方便的添加selected属性
-watch(fileStore.fileList, (newValue) => {
-
-    // 该方式，fileListMap可能包含已经删除的文件的信息，但一定能保证数量不会少于fileStore.fileList，运行效率比后一个好，但占用空间更多
-    newValue.forEach(item => {
-        //存在则不管
-        if (fileListMap.has(item.filePath)) return;
-        //不存在则添加
-        fileListMap.set(item.filePath, { source: item, selected: ref(false) });
-    });
-
-    // 该方式，始终保证fileListMap中的元素数量与fileStore.fileList完全相等，当运行效率不如前一个方式
-    // fileListMap.clear();
-    // newValue.forEach(item => {
-    //     fileListMap.set(item.filePath, { source: item, selected: ref(false) });
-    // });
-})
-
-let selectedItems = ref<number[]>([]);
+const selectedItems = ref<number[]>([]);
 let lastSelectedIndex: number | null = null; //给shift用的
 
 function onLiMousedown(index: number, e: MouseEvent) {
-    const currentFileMap = fileListMap.get(fileStore.fileList[index].filePath)!;
     //处理右键逻辑
-    if (e.button == 2 && currentFileMap.selected.value) return;
+    if (e.button == 2 && fileStore.fileList[index].selected) return;
 
     //要知道所有的li元素
     //获得触发事件的li元素
@@ -176,12 +150,12 @@ function onLiMousedown(index: number, e: MouseEvent) {
             //除当前index外 全部清除
             selectedItems.value.forEach((i) => {
                 if (i == index) return;
-                fileListMap.get(fileStore.fileList[i].filePath)!.selected.value = false;
+                fileStore.fileList[i].selected = false;
             });
         }
 
         //设置是否选中状态
-        currentFileMap.selected.value = true;
+        fileStore.fileList[index].selected = true;
         selectedItems.value = [index];
         lastSelectedIndex = index;
 
@@ -203,7 +177,7 @@ function onLiMousedown(index: number, e: MouseEvent) {
         if (selectedItems.value.length > 0) {
             //除当前index外 全部清除
             selectedItems.value.forEach((i) => {
-                fileListMap.get(fileStore.fileList[i].filePath)!.selected.value = false;
+                fileStore.fileList[i].selected = false;
             });
         }
         let start = 0;
@@ -216,7 +190,7 @@ function onLiMousedown(index: number, e: MouseEvent) {
         }
         const indexes = [];
         for (let i = start; i <= end; i++) {
-            fileListMap.get(fileStore.fileList[i].filePath)!.selected.value = true;
+            fileStore.fileList[i].selected = true;
             indexes.push(i);
         }
         selectedItems.value = indexes;
@@ -227,12 +201,12 @@ function onLiMousedown(index: number, e: MouseEvent) {
         //ctrl多选路线
         //设置是否选中状态
         const itemIndex = selectedItems.value.indexOf(index);
-        if (currentFileMap.selected.value && itemIndex > -1) {
+        if (fileStore.fileList[index].selected && itemIndex > -1) {
             //设置不选中
-            currentFileMap.selected.value = false;
+            fileStore.fileList[index].selected = false;
             selectedItems.value.splice(itemIndex, 1);
         } else {
-            currentFileMap.selected.value = true;
+            fileStore.fileList[index].selected = true;
             selectedItems.value.push(index);
             lastSelectedIndex = index;
         }
@@ -252,7 +226,7 @@ function onDivFocusout(e: MouseEvent) {
     if (selectedItems.value.length > 0) {
         //选中状态全部清除
         selectedItems.value.forEach((i) => {
-            fileListMap.get(fileStore.fileList[i].filePath)!.selected.value = false;
+            fileStore.fileList[i].selected = false;
         });
         selectedItems.value = [];
         lastSelectedIndex = null;
@@ -269,7 +243,7 @@ function onDivFocusout(e: MouseEvent) {
             <div>
                 <ul>
                     <li v-for="(item, index) in fileStore.fileList"
-                        :class="{ selected: fileListMap.get(item.filePath)?.selected.value }"
+                        :class="{ selected: item.selected }"
                         @contextmenu.prevent="onContextmenu($event)" @mouseover="onMouseover(item, $event)"
                         @mousemove="onMousemove" @mousedown="onLiMousedown(index, $event)">
                         {{ item.file }}

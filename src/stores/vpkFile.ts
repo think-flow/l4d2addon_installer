@@ -7,7 +7,8 @@ type VpkFileInfo = {
     fileWithoutEx: string,
     filePath: string,
     creationTime: Date,
-    size: string
+    size: string,
+    selected: boolean
 }
 
 let timer = 0;
@@ -33,6 +34,7 @@ export const useVpkFileStore = defineStore('vpk-file-list', () => {
             fileList.value.splice(0);
             //再把元素添加进去
             datas.forEach((data: VpkFileInfo) => {
+                data.selected = false;
                 fileList.value.push(data)
             });
         } catch (err) {
