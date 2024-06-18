@@ -3,6 +3,7 @@ import l4d2Hellper from './l4d2Helper'
 import { win } from './index'
 import os from 'os'
 import path from 'path'
+import cp from 'node:child_process'
 
 ipcMain.handle('openFolder', (_, path) => {
     return shell.openPath(path);
@@ -22,6 +23,14 @@ ipcMain.handle('get-Downloads-path', (_, arg) => {
 
 ipcMain.handle('open-file-dialog', async (_, options) => {
     return dialog.showOpenDialog(win, options);
+})
+
+ipcMain.handle('open-recycle-bin-folder', (_, options) => {
+    cp.exec('explorer shell:RecycleBinFolder', error => {
+        if(error.code===1) return;
+        throw error;
+    })
+    return Promise.resolve();
 })
 
 ipcMain.handle('get-vpk-files', (_) => {

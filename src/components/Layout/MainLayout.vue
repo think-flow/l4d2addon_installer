@@ -38,6 +38,14 @@ async function openDownloadsFolder() {
     }
 }
 
+async function openRecycleBinFolder(){
+    try {
+        await window.ipcRenderer.invoke('open-recycle-bin-folder');
+    } catch (err) {
+        logger.logError(err)
+    }
+}
+
 //安装vpk文件
 async function installVpk(files: string[]) {
     disabled.value = true;
@@ -94,6 +102,7 @@ function preventDeault(event: DragEvent) {
             <el-button type="primary" @click="openAddonsFloder" plain>addons文件夹</el-button>
             <el-button type="primary" @click="openGameFolder" plain>l4d2文件夹</el-button>
             <el-button type="primary" @click="openDownloadsFolder" plain>下载文件夹</el-button>
+            <el-button type="primary" @click="openRecycleBinFolder" plain>打开回收站</el-button>
         </div>
         <div class="bottom" v-loading="disabled" element-loading-text="正在安装...">
             <div class="switch">
