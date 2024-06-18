@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useLoggerStore } from '../../stores/logger'
 
 const scrollbarRef = ref()
@@ -9,12 +9,14 @@ const logger = useLoggerStore()
 onMounted(() => {
     window.ipcRenderer.on('main-process-log-message', (_event: any, msg: string) => {
         logger.logMsg(msg);
-        setScrollBottom();
     });
     window.ipcRenderer.on('main-process-log-error', (_event: any, msg: string) => {
         logger.logError(msg);
-        setScrollBottom();
     });
+})
+
+watch(logger.logs, () => {
+    setScrollBottom();
 })
 
 //设置滚动条到最底部
