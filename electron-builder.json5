@@ -1,7 +1,7 @@
 // @see https://www.electron.build/configuration/configuration
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  "appId": "YourAppID",
+  "appId": "com.cole.l4d2addoninstaller",
   "asar": true,
   "productName": "l4d2addon_installer",
   "directories": {
@@ -27,21 +27,16 @@
     "artifactName": "${productName}-Mac-${version}-Installer.${ext}"
   },
   "win": {
+    "icon":"public/icon.ico",
     "target": [
       {
-        "target": "nsis",
+        "target": "portable",
         "arch": [
           "x64"
         ]
       }
     ],
-    "artifactName": "${productName}-Windows-${version}-Setup.${ext}"
-  },
-  "nsis": {
-    "oneClick": false,
-    "perMachine": false,
-    "allowToChangeInstallationDirectory": true,
-    "deleteAppDataOnUninstall": false
+    "artifactName": "${productName}-Windows-${version}.${ext}"
   },
   "linux": {
     "target": [
