@@ -27,7 +27,7 @@ let showItem: VpkFileInfo | null = null;
 
 onMounted(async () => {
     await fileStore.updateList();
-    addDivFocusoutEventListener()
+    addDivFocusoutEventListener();
 })
 
 function onContextmenu(e: MouseEvent) {
@@ -52,8 +52,8 @@ async function onDeleteVpk() {
             type: 'success',
         })
         //删除成功后刷新列表
-        await fileStore.updateList();
-
+        //不需要手动刷新了，由main-process-addons-folder-changed处理
+        // await fileStore.updateList();
     } else {
         ElMessage({
             message: '删除失败',
@@ -148,10 +148,7 @@ watch(fileStore.fileList, (newValue) => {
     // 该方式，fileListMap可能包含已经删除的文件的信息，但一定能保证数量不会少于fileStore.fileList，运行效率比后一个好，但占用空间更多
     newValue.forEach(item => {
         //存在则不管
-        if (fileListMap.has(item.filePath)) {
-            console.log('existed')
-            return
-        };
+        if (fileListMap.has(item.filePath)) return;
         //不存在则添加
         fileListMap.set(item.filePath, { source: item, selected: ref(false) });
     });

@@ -4,12 +4,14 @@ import regedit from 'regedit'
 import { log, logErr } from './logHelper'
 import { shell } from 'electron'
 import cp from 'node:child_process'
+import chokidar from 'chokidar'
+import { win } from './index'
 
 //缓存获得的steam安装路径
 let g_steamPath: string = null;
 let g_gamePath: string = null;
 let g_addonsPath: string = null;
-
+let g_folderWatcher: chokidar.FSWatcher = null;;
 
 // 获取Steam路径
 const getSteamPath = () => {
@@ -115,6 +117,14 @@ const getVpkFiles = async () => {
     // 根据创建时间排序，从大到小
     vpkFilesInfo.sort((a, b) => b.creationTime - a.creationTime);
 
+    //监听addons文件夹变化
+    if (!g_folderWatcher) {
+        g_folderWatcher = chokidar.watch(addonsPath, { persistent: true, ignoreInitial: true })
+        g_folderWatcher.on('add', path => sendFolderChangedEvent('add', path));
+        g_folderWatcher.on('change', path => sendFolderChangedEvent('change', path));
+        g_folderWatcher.on('unlink', path => sendFolderChangedEvent('unlink', path));
+        g_folderWatcher.on('error', error => logErr(`监控文件夹路径时发生错误: ${error.message}`));
+    }
     // log(`找到${vpkFilesInfo.length}个vpk文件`);
     return vpkFilesInfo;
 
@@ -135,6 +145,11 @@ const getVpkFiles = async () => {
             }
         }
         return Math.floor((bytes / thresholds[unit]) * 100) / 100 + ' ' + unit;
+    }
+
+    function sendFolderChangedEvent(eventType: string, fildPath: string) {
+        if (path.extname(fildPath).toLowerCase() !== '.vpk') return;
+        win?.webContents.send('main-process-addons-folder-changed', { type: eventType, path: fildPath })
     }
 }
 

@@ -38,6 +38,7 @@
   },
   "dependencies": {
     "@imengyu/vue3-context-menu": "^1.4.1",
+    "chokidar": "^3.6.0",
     "element-plus": "^2.7.5",
     "jszip": "^3.10.1",
     "node-unrar-js": "^2.0.2",

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref } from 'vue';
 import { ElMessage, ElSwitch } from 'element-plus'
 import { useLoggerStore } from '../../stores/logger'
 import { useVpkFileStore } from '../../stores/vpkFile';
@@ -49,7 +49,8 @@ async function installVpk(files: string[]) {
         ElMessage.error(`安装失败，请查看日志`)
     }
     //刷新列表
-    await fileStore.updateList()
+    //不需要手动刷新了，由main-process-addons-folder-changed处理
+    //await fileStore.updateList()
 }
 
 async function handleClick() {
@@ -96,8 +97,8 @@ function preventDeault(event: DragEvent) {
         </div>
         <div class="bottom" v-loading="disabled" element-loading-text="正在安装...">
             <div class="switch">
-                <el-switch inline-prompt v-model="appConfig.isCoverd" active-text="替换文件" inactive-text="不替换文件" size="large"
-                    style="--el-switch-on-color: #409effe0; --el-switch-off-color: #409effe0" />
+                <el-switch inline-prompt v-model="appConfig.isCoverd" active-text="替换文件" inactive-text="不替换文件"
+                    size="large" style="--el-switch-on-color: #409effe0; --el-switch-off-color: #409effe0" />
             </div>
             <!-- 文件安装区域 -->
             <div class="installer" @click="handleClick" @contextmenu="handleClick" @dragenter="preventDeault"
