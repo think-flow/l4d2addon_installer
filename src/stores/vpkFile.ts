@@ -17,7 +17,12 @@ export const useVpkFileStore = defineStore('vpk-file-list', () => {
     async function updateList() {
         try {
             const datas = await window.ipcRenderer.invoke('get-vpk-files');
-            fileList.value = datas;
+            //清空所有元素
+            fileList.value.splice(0);
+            //再把元素添加进去
+            datas.forEach((data: VpkFileInfo) => {
+                fileList.value.push(data)
+            });
         } catch (err) {
             logError(err)
         }
