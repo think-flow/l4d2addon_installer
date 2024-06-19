@@ -1,10 +1,8 @@
 import path from 'node:path'
 import fs from 'node:fs'
-import jszip from 'jszip'
-import { createExtractorFromData } from 'node-unrar-js'
 
-process.on('message', async (arg) => {
-    const { addonsPath, filePaths, isCoverd } = arg;
+process.parentPort.on('message', async (arg) => {
+    const { addonsPath, filePaths, isCoverd } = arg.data;
 
     for (const filePath of filePaths) {
         const extname = path.extname(filePath).toLowerCase();
@@ -46,12 +44,13 @@ async function vpk_installer(filePath, addonsPath, isCoverd) {
 
 //zip文件安装程序
 async function zip_installer(filePath, addonsPath, isCoverd) {
+    const { loadAsync } = await import('jszip');
     const fileName = path.basename(filePath);
     log(`正在解压 ${fileName}`);
     const vpkEntries = [];
     try {
         const buffer = await fs.promises.readFile(filePath);
-        const zip = await jszip.loadAsync(buffer);
+        const zip = await loadAsync(buffer);
         zip.forEach(async (_, zipEntry) => {
             if (zipEntry.dir) return;
             if (path.extname(zipEntry.name).toLocaleLowerCase() === '.vpk') {
@@ -84,6 +83,7 @@ async function zip_installer(filePath, addonsPath, isCoverd) {
 
 //rar文件安装程序
 async function rar_installer(filePath, addonsPath, isCoverd) {
+    const { createExtractorFromData } = await import('node-unrar-js');
     const fileName = path.basename(filePath);
     log(`正在解压 ${fileName}`);
     const buffer = await fs.promises.readFile(filePath);
@@ -128,10 +128,10 @@ async function rar_installer(filePath, addonsPath, isCoverd) {
 
 //向主进程发送日志信息
 function log(msg) {
-    process.send({ type: 'message', content: msg })
+    process.parentPort.postMessage({ type: 'message', content: msg })
 }
 
 //向主进程发送错误信息
 function logErr(msg) {
-    process.send({ type: 'error', content: msg })
+    process.parentPort.postMessage({ type: 'error', content: msg })
 }

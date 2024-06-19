@@ -39,7 +39,7 @@ if (!app.requestSingleInstanceLock()) {
   process.exit(0)
 }
 
-export let win: BrowserWindow | null = null
+let win: BrowserWindow | null = null
 const preload = path.join(__dirname, '../preload/index.mjs')
 const indexHtml = path.join(RENDERER_DIST, 'index.html')
 

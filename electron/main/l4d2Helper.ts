@@ -1,17 +1,13 @@
 import path from 'node:path'
 import fs from 'node:fs'
-import regedit from 'regedit'
 import { log, logErr } from './logHelper'
-import { shell } from 'electron'
-import cp from 'node:child_process'
-import chokidar from 'chokidar'
-import { win } from './index'
+import { BrowserWindow } from 'electron'
 
 //缓存获得的steam安装路径
 let g_steamPath: string = null;
 let g_gamePath: string = null;
 let g_addonsPath: string = null;
-let g_folderWatcher: chokidar.FSWatcher = null;;
+let g_folderWatcher: unknown = null;
 
 // 获取Steam路径
 const getSteamPath = () => {
@@ -19,12 +15,13 @@ const getSteamPath = () => {
         return Promise.resolve(g_steamPath);
     }
     //从注册表中获取steam安装路径
-    return new Promise<string>((resolve, reject) => {
+    return new Promise<string>(async (resolve, reject) => {
         const steamRegistryPath = 'HKCU\\Software\\Valve\\Steam';
         const steamRegistryKey = 'SteamPath';
 
         //如果不从指定的位置读取regList.wsf文件
         //那么在程序打包后，读取注册表时，会因为找不到regList.wsf文件而报错
+        const regedit = await import('regedit')
         regedit.setExternalVBSLocation('./resources/app.asar.unpacked/node_modules/regedit/vbs')
 
         regedit.list([steamRegistryPath], (err, result) => {
@@ -119,13 +116,14 @@ const getVpkFiles = async () => {
 
     //监听addons文件夹变化
     if (!g_folderWatcher) {
-        g_folderWatcher = chokidar.watch(addonsPath, { persistent: true, ignoreInitial: true })
-        g_folderWatcher.on('add', path => sendFolderChangedEvent('add', path));
-        g_folderWatcher.on('change', path => sendFolderChangedEvent('change', path));
-        g_folderWatcher.on('unlink', path => sendFolderChangedEvent('unlink', path));
-        g_folderWatcher.on('error', error => logErr(`监控文件夹路径时发生错误: ${error.message}`));
+        const { watch } = await import('chokidar');
+        const watcher = watch(addonsPath, { persistent: true, ignoreInitial: true })
+        watcher.on('add', path => sendFolderChangedEvent('add', path));
+        watcher.on('change', path => sendFolderChangedEvent('change', path));
+        watcher.on('unlink', path => sendFolderChangedEvent('unlink', path));
+        watcher.on('error', error => logErr(`监控文件夹路径时发生错误: ${error.message}`));
+        g_folderWatcher = watcher;
     }
-    // log(`找到${vpkFilesInfo.length}个vpk文件`);
     return vpkFilesInfo;
 
     function formatFileSize(bytes: number) {
@@ -149,13 +147,14 @@ const getVpkFiles = async () => {
 
     function sendFolderChangedEvent(eventType: string, fildPath: string) {
         if (path.extname(fildPath).toLowerCase() !== '.vpk') return;
-        win?.webContents.send('main-process-addons-folder-changed', { type: eventType, path: fildPath })
+        BrowserWindow.fromId(1).webContents.send('main-process-addons-folder-changed', { type: eventType, path: fildPath })
     }
 }
 
 const delectVpk = async (filePaths: string[], toTrash: boolean = true) => {
     let success = true;
     if (toTrash) {
+        const { shell } = await import('electron');
         // 将文件移到回收站
         for (const filePath of filePaths) {
             try {
@@ -183,43 +182,40 @@ const delectVpk = async (filePaths: string[], toTrash: boolean = true) => {
 
 const installVpk = (filePaths: string[], isCoverd: boolean) => {
     return new Promise(async (resolve, reject) => {
-        const addonsPath = await getAddonsPath();
         let workerPath = './electron/worker_threads/install-vpk-worker.js';
         if (process.env.NODE_ENV !== 'development') {
             workerPath = './resources/app.asar.unpacked/worker_threads/install-vpk-worker.js';
         }
         //创建文件安装进程
-        const installerProcess = cp.fork(workerPath);
+        const { utilityProcess } = await import('electron');
+        const installer = utilityProcess.fork(workerPath);
         let success = true;
-        installerProcess.on('message', (msg: any) => {
+        installer.on('message', (msg: any) => {
             if (msg.type === 'message') {
                 log(msg.content);
             } else if (msg.type === 'error') {
                 success = false;
                 logErr(msg.content);
+            } else {
+                reject('不支持的消息类型');
             }
         });
-        installerProcess.on('error', (err) => {
-            logErr(err.message);
-            resolve(false);             //当进程执行出现异常 就结束promise等待
-        });
-        installerProcess.on('exit', (code) => {
+        installer.on('exit', (code) => {
             if (code !== 0) {
+                success = false;
                 logErr(`unrar-worker stopped with exit code ${code}`);
             }
-            resolve(success);           //当进程退出 就结束promise等待
+            resolve(success);           //进程退出 结束promise等待
         });
-        //启动进程
-        installerProcess.send({ filePaths, addonsPath, isCoverd });
+        const addonsPath = await getAddonsPath();
+        installer.postMessage({ filePaths, addonsPath, isCoverd });
     });
 }
 
-const l4d2Hellper = {
+export default {
     getGamePath,
     getAddonsPath,
     getVpkFiles,
     delectVpk,
     installVpk,
-};
-
-export default l4d2Hellper
+}
