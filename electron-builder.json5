@@ -9,16 +9,11 @@
   },
   "files": [
     "dist",
-    "dist-electron",
-    {
-      "from": "electron/worker_threads/js",
-      "to": "worker_threads",
-      "filter": ["**/*"]
-    }
+    "dist-electron"
   ],
   "asarUnpack": [
     "**/node_modules/regedit/vbs/**",
-    "**/worker_threads/**",
+    "**/dist-electron/main/worker_threads/**",
   ],
   "mac": {
     "target": [

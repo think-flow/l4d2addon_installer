@@ -88,7 +88,7 @@ async function rar_installer(filePath, addonsPath, isCoverd) {
     log(`正在解压 ${fileName}`);
     const buffer = await fs.promises.readFile(filePath);
     const extractor = await createExtractorFromData({ data: buffer });
-    const extracted = extractor.extract({
+    const extracted: any = extractor.extract({
         files: (fileHeader) => {
             if (fileHeader.flags.directory) return false;
             return path.extname(fileHeader.name).toLocaleLowerCase() === '.vpk';

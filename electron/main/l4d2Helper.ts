@@ -182,11 +182,15 @@ const delectVpk = async (filePaths: string[], toTrash: boolean = true) => {
 
 const installVpk = (filePaths: string[], isCoverd: boolean) => {
     return new Promise(async (resolve, reject) => {
-        let workerPath = './electron/worker_threads/install-vpk-worker.js';
+        let workerPath = './dist-electron/main/worker_threads/install-vpk-worker.js';
         if (process.env.NODE_ENV !== 'development') {
-            workerPath = './resources/app.asar.unpacked/worker_threads/install-vpk-worker.js';
+            workerPath = './resources/app.asar.unpacked/dist-electron/main/worker_threads/install-vpk-worker.js';
         }
         //创建文件安装进程
+        if (!fs.existsSync(workerPath)) {
+            reject('cannot find file install-vpk-worker.js');
+            return;
+        }
         const { utilityProcess } = await import('electron');
         const installer = utilityProcess.fork(workerPath);
         let success = true;

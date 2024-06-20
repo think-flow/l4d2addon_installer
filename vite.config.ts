@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import path from 'node:path'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import electron from 'vite-plugin-electron/simple'
@@ -37,6 +38,31 @@ export default defineConfig(({ command }) => {
                 // Others need to put them in `dependencies` to ensure they are collected into `app.asar` after the app is built.
                 // Of course, this is not absolute, just this way is relatively simple. :)
                 external: Object.keys('dependencies' in pkg ? pkg.dependencies : {}),
+                plugins: [
+                  {
+                    // 该插件会将electron/worker_threads文件夹下的ts文件单独打包为对应的js文件，以供childprocess,utilityProcess等使用
+                    name: 'build-worker-threads',
+                    async buildStart() {
+                      const files = await fs.promises.readdir('electron/worker_threads');
+                      files.filter(file => path.extname(file).toLowerCase() === '.ts')
+                        .forEach(file => {
+                          this.emitFile({
+                            type: 'chunk',
+                            id: path.join('electron/worker_threads', file)
+                          })
+                        })
+                    },
+                    generateBundle(options, bundle) {
+                      for (const [fileName, chunkInfo] of Object.entries(bundle)) {
+                        if (chunkInfo.type === 'chunk' && chunkInfo.isEntry && chunkInfo.facadeModuleId.includes('electron\\worker_threads')) {
+                          // 修改文件名和路径 不要文件后面带哈希值
+                          //将在dist-electron/main/worker_threads文件夹下 生成js文件
+                          bundle[fileName].fileName = 'worker_threads/' + chunkInfo.name + '.js';
+                        }
+                      }
+                    }
+                  }
+                ]
               },
             },
           },
