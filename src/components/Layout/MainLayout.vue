@@ -38,7 +38,7 @@ async function openDownloadsFolder() {
     }
 }
 
-async function openRecycleBinFolder(){
+async function openRecycleBinFolder() {
     try {
         await window.ipcRenderer.invoke('open-recycle-bin-folder');
     } catch (err) {
@@ -49,7 +49,12 @@ async function openRecycleBinFolder(){
 //安装vpk文件
 async function installVpk(files: string[]) {
     disabled.value = true;
-    const result = await window.ipcRenderer.invoke('install-vpk-files', files, appConfig.isCoverd);
+    let result = false;
+    try {
+        result = await window.ipcRenderer.invoke('install-vpk-files', files, appConfig.isCoverd);
+    } catch (err) {
+        logger.logError(err)
+    }
     disabled.value = false;
     if (result) {
         ElMessage.success('安装成功');
