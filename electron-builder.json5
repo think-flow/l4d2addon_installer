@@ -11,7 +11,7 @@
     "dist",
     "dist-electron",
     {
-      "from": "electron/worker_threads",
+      "from": "electron/worker_threads/js",
       "to": "worker_threads",
       "filter": ["**/*"]
     }
@@ -30,7 +30,8 @@
     "icon":"public/icon.ico",
     "target": [
       {
-        "target": "portable",
+        //"target": "portable", //打包成一个单文件
+        "target": "nsis",       //打包成一个安装包
         "arch": [
           "x64"
         ]

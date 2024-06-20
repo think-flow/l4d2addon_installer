@@ -1,6 +1,6 @@
 {
-  "name": "electron-vue-vite",
-  "version": "1.0.0",
+  "name": "l4d2addon_installer",
+  "version": "1.0.1",
   "main": "dist-electron/main/index.js",
   "description": "Really simple Electron + Vue + Vite boilerplate.",
   "author": "Cole <564603061@qq.com>",
