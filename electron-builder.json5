@@ -5,7 +5,7 @@
   "asar": true,
   "productName": "l4d2addon_installer",
   "directories": {
-    "output": "release/${version}"
+    "output": "release"
   },
   "files": [
     "dist",

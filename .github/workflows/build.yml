@@ -1,27 +1,13 @@
-name: Build
-
+name: Build and release tag
 on:
   push:
-    branches: [main]
-    paths-ignore:
-      - "**.md"
-      - "**.spec.js"
-      - ".idea"
-      - ".vscode"
-      - ".dockerignore"
-      - "Dockerfile"
-      - ".gitignore"
-      - ".github/**"
-      - "!.github/workflows/build.yml"
-
+    tags:
+      - "v*"
+  workflow_dispatch:  # 添加这一行以支持手动触发
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
-
+    runs-on: windows-latest
+    
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -29,7 +15,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Install Dependencies
         run: npm install
@@ -39,9 +25,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: release_on_${{ matrix. os }}
-          path: release/
-          retention-days: 5
+      - name: Zip the build
+        run: powershell -Command "Compress-Archive -Path .\release\win-unpacked\* -DestinationPath .\l4d2addon_installer_${{ github.ref_name }}.zip"
+
+      - name: Install GitHub CLI
+        run: |
+          Invoke-WebRequest -Uri https://github.com/cli/cli/releases/download/v2.0.0/gh_2.0.0_windows_amd64.msi -OutFile gh.msi
+          Start-Process msiexec.exe -Wait -ArgumentList '/I gh.msi /quiet'
+      
+      - name: Create Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create ${{ github.ref }} l4d2addon_installer_${{ github.ref_name }}.zip --title "${{ github.ref_name }}" --notes "TODO New Release."
