@@ -88,6 +88,17 @@ async function onCopyFileName() {
     }
 }
 
+async function onRevealInFileExplorer() {
+    const items = selectedItems.value;
+    if (items.length === 1) {
+        try {
+            await window.ipcRenderer.invoke('reveal-in-file-explorer', fileStore.fileList[items[0]].filePath);
+        } catch (err) {
+            logger.logError(err)
+        }
+    }
+}
+
 function onMouseover(item: VpkFileInfo, e: MouseEvent) {
     const hoverLi: any = e.target;
     showItem = item;
@@ -242,8 +253,7 @@ function onDivFocusout(e: MouseEvent) {
         <el-scrollbar wrap-class="list">
             <div>
                 <ul>
-                    <li v-for="(item, index) in fileStore.fileList"
-                        :class="{ selected: item.selected }"
+                    <li v-for="(item, index) in fileStore.fileList" :class="{ selected: item.selected }"
                         @contextmenu.prevent="onContextmenu($event)" @mouseover="onMouseover(item, $event)"
                         @mousemove="onMousemove" @mousedown="onLiMousedown(index, $event)">
                         {{ item.file }}
@@ -269,6 +279,7 @@ function onDivFocusout(e: MouseEvent) {
 
     <context-menu v-model:show="showContextmenu" :options="optionsComponent">
         <context-menu-item label="复制文件名" @click="onCopyFileName" />
+        <context-menu-item v-show="selectedItems.length === 1" label="资源浏览器中打开" @click="onRevealInFileExplorer" />
         <context-menu-sperator />
         <context-menu-item label="删除" @click="onDeleteVpk" />
     </context-menu>
