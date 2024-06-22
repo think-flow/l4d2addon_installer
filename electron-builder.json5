@@ -26,7 +26,8 @@
     "target": [
       {
         //"target": "portable", //打包成一个单文件
-        "target": "nsis",       //打包成一个安装包
+        //"target": "nsis",       //打包成一个安装包
+        "target": "zip",       //打包成一个压缩包
         "arch": [
           "x64"
         ]
