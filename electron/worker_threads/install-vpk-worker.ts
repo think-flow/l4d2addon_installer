@@ -1,5 +1,6 @@
 import path from 'node:path'
 import fs from 'node:fs'
+import jszip from 'jszip'
 
 process.parentPort.on('message', async (arg) => {
     const { addonsPath, filePaths, isCoverd } = arg.data;
@@ -44,13 +45,12 @@ async function vpk_installer(filePath, addonsPath, isCoverd) {
 
 //zip文件安装程序
 async function zip_installer(filePath, addonsPath, isCoverd) {
-    const { loadAsync } = await import('jszip');
     const fileName = path.basename(filePath);
     log(`正在解压 ${fileName}`);
     const vpkEntries = [];
     try {
         const buffer = await fs.promises.readFile(filePath);
-        const zip = await loadAsync(buffer);
+        const zip = await jszip.loadAsync(buffer);
         zip.forEach(async (_, zipEntry) => {
             if (zipEntry.dir) return;
             if (path.extname(zipEntry.name).toLocaleLowerCase() === '.vpk') {
