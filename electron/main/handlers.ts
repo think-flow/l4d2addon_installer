@@ -26,8 +26,18 @@ ipcMain.handle('open-file-dialog', async (_, options) => {
 
 ipcMain.handle('open-recycle-bin-folder', (_, options) => {
     cp.exec('explorer shell:RecycleBinFolder', error => {
-        if (error.code === 1) return;
-        throw error;
+        if (error.code !== 1) {
+            return Promise.reject(error.message);
+        }
+    })
+    return Promise.resolve();
+})
+
+ipcMain.handle('reveal-in-file-explorer', (_, filePath) => {
+    cp.exec(`explorer /select, ${filePath}`, error => {
+        if (error.code !== 1) {
+            return Promise.reject(error.message)
+        }
     })
     return Promise.resolve();
 })
