@@ -13,7 +13,6 @@
   ],
   "asarUnpack": [
     "**/node_modules/regedit/vbs/**",
-    "**/dist-electron/main/worker_threads/**",
   ],
   "mac": {
     "target": [
