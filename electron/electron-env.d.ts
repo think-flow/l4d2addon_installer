@@ -19,5 +19,9 @@ declare namespace NodeJS {
     APP_ROOT: string
     /** /dist/ or /public/ */
     VITE_PUBLIC: string
+    /** dev: /dist-electron/main/worker_threads production: ./app.asar/dist-electron/main/worker_threads */
+    WORKER_THREADS: string
+    /** './resources/app.asar.unpacked' */
+    ASAR_UNPACK: string
   }
 }

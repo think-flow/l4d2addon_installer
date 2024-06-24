@@ -57,6 +57,10 @@ async function zip_installer(filePath, addonsPath, isCoverd) {
                 vpkEntries.push(zipEntry);
             }
         });
+        if (vpkEntries.length < 1) {
+            logErr('未找到需要安装的vpk文件')
+            return;
+        }
         log(`解压出${vpkEntries.length}个文件 ${vpkEntries.map(c => `"${c.name}"`).reduce((pv, cv) => `${pv},${cv}`)}`);
     } catch (err) {
         logErr(err.message);
@@ -97,6 +101,10 @@ async function rar_installer(filePath, addonsPath, isCoverd) {
     let vpkFiles = null;
     try {
         vpkFiles = [...extracted.files];
+        if (vpkFiles.length < 1) {
+            logErr('未找到需要安装的vpk文件')
+            return;
+        }
         log(`解压出${vpkFiles.length}个文件 ${vpkFiles.map(c => `"${c.fileHeader.name}"`).reduce((pv, cv) => `${pv},${cv}`)}`);
     } catch (err) {
         if (err.reason === 'ERAR_MISSING_PASSWORD') {

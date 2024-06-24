@@ -22,8 +22,9 @@ const getSteamPath = () => {
         //如果不从指定的位置读取regList.wsf文件
         //那么在程序打包后，读取注册表时，会因为找不到regList.wsf文件而报错
         const regedit = await import('regedit')
-        regedit.setExternalVBSLocation('./resources/app.asar.unpacked/node_modules/regedit/vbs')
-
+        if (process.env.NODE_ENV !== 'development') {
+            regedit.setExternalVBSLocation(path.join(process.env.ASAR_UNPACK, 'node_modules/regedit/vbs'))
+        }
         regedit.list([steamRegistryPath], (err, result) => {
             if (err) {
                 return reject('读取注册表出错: ' + err);
@@ -182,12 +183,7 @@ const delectVpk = async (filePaths: string[], toTrash: boolean = true) => {
 
 const installVpk = (filePaths: string[], isCoverd: boolean) => {
     return new Promise(async (resolve, reject) => {
-        let workerPath = './dist-electron/main/worker_threads/install-vpk-worker.js';
-        if (process.env.NODE_ENV !== 'development') {
-            //workerPath = './resources/app.asar.unpacked/dist-electron/main/worker_threads/install-vpk-worker.js';
-            //process.env.APP_ROOT的路径是当前程序包含.asar文件的路径
-            workerPath = path.join(process.env.APP_ROOT, workerPath);
-        }
+        const workerPath = path.join(process.env.WORKER_THREADS, 'install-vpk-worker.js');
         //创建文件安装进程
         const installer = utilityProcess.fork(workerPath);
         let success = true;
