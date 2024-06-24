@@ -1,7 +1,7 @@
 import path from 'node:path'
 import fs from 'node:fs'
 import { log, logErr } from './logHelper'
-import { BrowserWindow } from 'electron'
+import { BrowserWindow, utilityProcess } from 'electron'
 
 //缓存获得的steam安装路径
 let g_steamPath: string = null;
@@ -184,14 +184,11 @@ const installVpk = (filePaths: string[], isCoverd: boolean) => {
     return new Promise(async (resolve, reject) => {
         let workerPath = './dist-electron/main/worker_threads/install-vpk-worker.js';
         if (process.env.NODE_ENV !== 'development') {
-            workerPath = './resources/app.asar.unpacked/dist-electron/main/worker_threads/install-vpk-worker.js';
+            //workerPath = './resources/app.asar.unpacked/dist-electron/main/worker_threads/install-vpk-worker.js';
+            //process.env.APP_ROOT的路径是当前程序包含.asar文件的路径
+            workerPath = path.join(process.env.APP_ROOT, workerPath);
         }
         //创建文件安装进程
-        if (!fs.existsSync(workerPath)) {
-            reject('cannot find file install-vpk-worker.js');
-            return;
-        }
-        const { utilityProcess } = await import('electron');
         const installer = utilityProcess.fork(workerPath);
         let success = true;
         installer.on('message', (msg: any) => {
