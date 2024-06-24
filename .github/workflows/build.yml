@@ -32,7 +32,14 @@ jobs:
           Invoke-WebRequest -Uri https://github.com/cli/cli/releases/download/v2.0.0/gh_2.0.0_windows_amd64.msi -OutFile gh.msi
           Start-Process msiexec.exe -Wait -ArgumentList '/I gh.msi /quiet'
       
+      - name: Get Tag Message
+        id: get_tag_message
+        run: |
+          $tag_message = &git for-each-ref --format="%(contents)" $(git rev-parse --symbolic-full-name ${{ github.ref }})
+          echo "TAG_MESSAGE=$tag_message" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      
       - name: Create Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create ${{ github.ref }} l4d2addon_installer_${{ github.ref_name }}_windows.zip --title "${{ github.ref_name }}" --notes "TODO New Release."
+        run: |
+          gh release create ${{ github.ref }} l4d2addon_installer_${{ github.ref_name }}_windows.zip --title "${{ github.ref_name }}" --notes "$env:TAG_MESSAGE"
