@@ -3,7 +3,13 @@ import { ipcRenderer, contextBridge } from 'electron'
 export type IpcRenderer = {
   openFolder(path: string),
   delectVpk(path: string[], toTrash: boolean),
-  showOpenDialog(options: Electron.OpenDialogOptions): Promise<any>
+  showOpenDialog(options: Electron.OpenDialogOptions): Promise<any>,
+  /**
+   * 打开一个新窗口
+   * @param path 新窗口的路径
+   * @param options 新窗口设置
+   */
+  openWindow(path: string, options?: Electron.BrowserWindowConstructorOptions): Promise<void>
 } & Electron.IpcRenderer
 
 // --------- Expose some API to the Renderer process ---------
@@ -37,8 +43,10 @@ contextBridge.exposeInMainWorld('ipcRenderer', <IpcRenderer>{
     let result = await ipcRenderer.invoke('open-file-dialog', options)
     if (result.canceled) return null; //用户点击取消按钮
     return result.filePaths;
+  },
+  openWindow(path: string, options?: Electron.BrowserWindowConstructorOptions) {
+    ipcRenderer.invoke('open-win', path, options)
   }
-
 })
 
 // --------- Preload scripts loading ---------

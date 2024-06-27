@@ -99,6 +99,10 @@ function preventDeault(event: DragEvent) {
     event.preventDefault();
     event.stopPropagation();
 }
+
+async function openAbout() {
+    await window.ipcRenderer.openWindow('/about', { modal: true, width: 300, height: 300, resizable: false,title:'关于' })
+}
 </script>
 
 <template>
@@ -108,6 +112,7 @@ function preventDeault(event: DragEvent) {
             <el-button type="primary" @click="openGameFolder" plain>l4d2文件夹</el-button>
             <el-button type="primary" @click="openDownloadsFolder" plain>下载文件夹</el-button>
             <el-button type="primary" @click="openRecycleBinFolder" plain>打开回收站</el-button>
+            <el-button type="primary" @click="openAbout" plain>关于</el-button>
         </div>
         <div class="bottom" v-loading="disabled" element-loading-text="正在安装...">
             <div class="switch">
