@@ -49,7 +49,7 @@ const indexHtml = path.join(RENDERER_DIST, 'index.html')
 async function createWindow() {
 
   win = new BrowserWindow({
-    title: 'Main window',
+    title: 'vpk安装器',
     icon: path.join(process.env.VITE_PUBLIC, 'favicon.ico'),
     webPreferences: {
       preload,
@@ -110,18 +110,38 @@ app.on('activate', () => {
 })
 
 // New window example arg: new windows url
-ipcMain.handle('open-win', (_, arg) => {
-  const childWindow = new BrowserWindow({
+//使用vue-router，并利用的它的WebHashHistory模式，实现新窗口，也能渲染vue组件
+ipcMain.handle('open-win', (_, path: string, options?: Electron.BrowserWindowConstructorOptions) => {
+  const initOptions = {
+    parent: win,
+    width: 600,
+    height: 400,
     webPreferences: {
       preload,
-      nodeIntegration: true,
-      contextIsolation: false,
-    },
-  })
-
-  if (VITE_DEV_SERVER_URL) {
-    childWindow.loadURL(`${VITE_DEV_SERVER_URL}#${arg}`)
-  } else {
-    childWindow.loadFile(indexHtml, { hash: arg })
+      nodeIntegration: false,
+      contextIsolation: true,
+    }
   }
+  if (options) {
+    options = { ...initOptions, ...options }
+  } else {
+    options = initOptions
+  }
+  const childWindow = new BrowserWindow(options)
+  if (VITE_DEV_SERVER_URL) {
+    childWindow.loadURL(`${VITE_DEV_SERVER_URL}#${path}`)
+    // Open devTool if the app is not packaged
+    childWindow.webContents.openDevTools()
+  } else {
+    childWindow.loadFile(indexHtml, { hash: path })
+  }
+})
+
+ipcMain.handle('fireworks', (_, arg) => {
+  const childWindow = new BrowserWindow({
+    parent: win,
+    width: 600,
+    height: 400,
+  })
+  childWindow.loadFile(path.join(process.env.VITE_PUBLIC, 'fireworks/index.html'))
 })
