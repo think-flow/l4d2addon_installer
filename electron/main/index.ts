@@ -128,10 +128,20 @@ ipcMain.handle('open-win', (_, path: string, options?: Electron.BrowserWindowCon
     options = initOptions
   }
   const childWindow = new BrowserWindow(options)
-
   if (VITE_DEV_SERVER_URL) {
     childWindow.loadURL(`${VITE_DEV_SERVER_URL}#${path}`)
+    // Open devTool if the app is not packaged
+    childWindow.webContents.openDevTools()
   } else {
     childWindow.loadFile(indexHtml, { hash: path })
   }
+})
+
+ipcMain.handle('fireworks', (_, arg) => {
+  const childWindow = new BrowserWindow({
+    parent: win,
+    width: 600,
+    height: 400,
+  })
+  childWindow.loadFile(path.join(process.env.VITE_PUBLIC, 'fireworks/index.html'))
 })
