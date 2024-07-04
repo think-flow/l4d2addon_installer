@@ -28,7 +28,6 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
   ? path.join(process.env.APP_ROOT, 'public')
   : RENDERER_DIST
 
-process.env.WORKER_THREADS = path.join(process.env.APP_ROOT, 'dist-electron/main/worker_threads')
 process.env.ASAR_UNPACK = './resources/app.asar.unpacked'
 
 // Disable GPU Acceleration for Windows 7

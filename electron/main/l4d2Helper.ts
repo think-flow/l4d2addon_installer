@@ -1,8 +1,8 @@
 import path from 'node:path'
 import fs from 'node:fs'
 import { log, logErr } from './logHelper'
-import { BrowserWindow } from 'electron'
-import workerProcess from './utilities/worker_process'
+import { BrowserWindow,utilityProcess } from 'electron'
+import vpkWorkerPath from '../worker_threads/install-vpk-worker?modulePath'
 
 //缓存获得的steam安装路径
 let g_steamPath: string = null;
@@ -185,7 +185,7 @@ const delectVpk = async (filePaths: string[], toTrash: boolean = true) => {
 const installVpk = (filePaths: string[], isCoverd: boolean) => {
     return new Promise(async (resolve, reject) => {
         //创建文件安装进程
-        const installer = workerProcess.run('install-vpk-worker');
+        const installer = utilityProcess.fork(vpkWorkerPath)
         let success = true;
         installer.on('message', (msg: any) => {
             if (msg.type === 'message') {
