@@ -1,7 +1,7 @@
 import path from 'node:path'
 import fs from 'node:fs'
 import { log, logErr } from './logHelper'
-import { BrowserWindow,utilityProcess } from 'electron'
+import { BrowserWindow, utilityProcess } from 'electron'
 import vpkWorkerPath from '../worker_threads/install-vpk-worker?modulePath'
 
 //缓存获得的steam安装路径
@@ -41,14 +41,11 @@ const getSteamPath = () => {
 };
 
 // 解析 libraryfolders.vdf 文件
-const parseLibraryFoldersVDF = (vdfContent) => {
+const parseLibraryFoldersVDF = (vdfContent: string) => {
     const libraryFolders = [];
-    const lines = vdfContent.split('\n');
-    for (const line of lines) {
-        const match = line.match(/"\d+"\s+"(.+?)"/);
-        if (match) {
-            libraryFolders.push(match[1]);
-        }
+    const matchs = vdfContent.matchAll(/"path"\s+"([^"]+)"/g)
+    for (const match of Array.from(matchs)) {
+        libraryFolders.push(match[1]);
     }
     return <string[]>libraryFolders;
 };
