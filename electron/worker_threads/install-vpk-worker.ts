@@ -3,19 +3,17 @@ import fs from 'node:fs'
 import jszip from 'jszip'
 
 process.parentPort.on('message', async (arg) => {
-    const { addonsPath, filePaths, isCoverd } = arg.data;
+    const { addonsPath, filePath, isCoverd } = arg.data;
 
-    for (const filePath of filePaths) {
-        const extname = path.extname(filePath).toLowerCase();
-        if (extname === '.vpk') {
-            await vpk_installer(filePath, addonsPath, isCoverd);
-        } else if (extname === '.zip') {
-            await zip_installer(filePath, addonsPath, isCoverd);
-        } else if (extname === '.rar') {
-            await rar_installer(filePath, addonsPath, isCoverd);
-        } else {
-            logErr(`${path.basename(filePath)} 不支持该文件格式`);
-        }
+    const extname = path.extname(filePath).toLowerCase();
+    if (extname === '.vpk') {
+        await vpk_installer(filePath, addonsPath, isCoverd);
+    } else if (extname === '.zip') {
+        await zip_installer(filePath, addonsPath, isCoverd);
+    } else if (extname === '.rar') {
+        await rar_installer(filePath, addonsPath, isCoverd);
+    } else {
+        logErr(`${path.basename(filePath)} 不支持该文件格式`);
     }
 
     //执行完成 进程正常退出
@@ -46,7 +44,7 @@ async function vpk_installer(filePath, addonsPath, isCoverd) {
 //zip文件安装程序
 async function zip_installer(filePath, addonsPath, isCoverd) {
     const fileName = path.basename(filePath);
-    log(`正在解压 ${fileName}`);
+    // log(`正在解压 ${fileName}`);
     const vpkEntries = [];
     try {
         const buffer = await fs.promises.readFile(filePath);
@@ -61,7 +59,8 @@ async function zip_installer(filePath, addonsPath, isCoverd) {
             logErr('未找到需要安装的vpk文件')
             return;
         }
-        log(`解压出${vpkEntries.length}个文件 ${vpkEntries.map(c => `"${c.name}"`).reduce((pv, cv) => `${pv},${cv}`)}`);
+        // log(`解压出${vpkEntries.length}个文件 ${vpkEntries.map(c => `"${c.name}"`).reduce((pv, cv) => `${pv},${cv}`)}`);
+        log(`${fileName} --> ${vpkEntries.map(c => `"${c.name}"`).reduce((pv, cv) => `${pv},${cv}`)}`);
     } catch (err) {
         logErr(err.message);
         return; //如果解压文件失败，则去处理下一个文件
@@ -89,7 +88,7 @@ async function zip_installer(filePath, addonsPath, isCoverd) {
 async function rar_installer(filePath, addonsPath, isCoverd) {
     const { createExtractorFromData } = await import('node-unrar-js');
     const fileName = path.basename(filePath);
-    log(`正在解压 ${fileName}`);
+    // log(`正在解压 ${fileName}`);
     const buffer = await fs.promises.readFile(filePath);
     const extractor = await createExtractorFromData({ data: buffer });
     const extracted: any = extractor.extract({
@@ -105,7 +104,8 @@ async function rar_installer(filePath, addonsPath, isCoverd) {
             logErr('未找到需要安装的vpk文件')
             return;
         }
-        log(`解压出${vpkFiles.length}个文件 ${vpkFiles.map(c => `"${c.fileHeader.name}"`).reduce((pv, cv) => `${pv},${cv}`)}`);
+        // log(`解压出${vpkFiles.length}个文件 ${vpkFiles.map(c => `"${c.fileHeader.name}"`).reduce((pv, cv) => `${pv},${cv}`)}`);
+        log(`${fileName} --> ${vpkFiles.map(c => `"${c.fileHeader.name}"`).reduce((pv, cv) => `${pv},${cv}`)}`);
     } catch (err) {
         if (err.reason === 'ERAR_MISSING_PASSWORD') {
             logErr('不支持带有密码的rar文件');

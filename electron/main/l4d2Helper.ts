@@ -180,30 +180,34 @@ const delectVpk = async (filePaths: string[], toTrash: boolean = true) => {
 }
 
 const installVpk = (filePaths: string[], isCoverd: boolean) => {
-    return new Promise(async (resolve, reject) => {
-        //创建文件安装进程
-        const installer = utilityProcess.fork(vpkWorkerPath)
-        let success = true;
-        installer.on('message', (msg: any) => {
-            if (msg.type === 'message') {
-                log(msg.content);
-            } else if (msg.type === 'error') {
-                success = false;
-                logErr(msg.content);
-            } else {
-                reject('不支持的消息类型');
-            }
-        });
-        installer.on('exit', (code) => {
-            if (code !== 0) {
-                success = false;
-                logErr(`unrar-worker stopped with exit code ${code}`);
-            }
-            resolve(success);           //进程退出 结束promise等待
-        });
-        const addonsPath = await getAddonsPath();
-        installer.postMessage({ filePaths, addonsPath, isCoverd });
-    });
+    let tasks = []
+    for (const filePath of filePaths) {
+        tasks.push(new Promise<boolean>(async (resolve, reject) => {
+            //创建文件安装进程
+            const installer = utilityProcess.fork(vpkWorkerPath)
+            let result = true;
+            installer.on('message', (msg: any) => {
+                if (msg.type === 'message') {
+                    log(msg.content);
+                } else if (msg.type === 'error') {
+                    result = false;
+                    logErr(msg.content);
+                } else {
+                    reject('不支持的消息类型');
+                }
+            });
+            installer.on('exit', (code) => {
+                if (code !== 0) {
+                    result = false;
+                    logErr(`install-vpk-worker stopped with exit code ${code}`);
+                }
+                resolve(result);       //进程退出 结束promise等待
+            });
+            const addonsPath = await getAddonsPath();
+            installer.postMessage({ filePath, addonsPath, isCoverd });
+        }))
+    }
+    return Promise.all(tasks)
 }
 
 export default {
